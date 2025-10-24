@@ -1,12 +1,13 @@
 #include <iostream>
 #include <string>
+#include <gtest/gtest.h>
+#include <iostream>
 
 #include "matrix.hpp"
 
 
 
-int test_init(){
-    
+int test_init(){    
     Matrix<int> m(3, 4);
     return 0;
 }

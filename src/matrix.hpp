@@ -89,7 +89,7 @@ class Matrix{
          */
         ~Matrix(){
             for(int i = 0; i< this->rows; ++i){
-                delete[] this->buf[i];
+                delete[] (this->buf)[i];
             }
             delete[] this->buf;
         }
