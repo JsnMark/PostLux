@@ -1,14 +1,13 @@
 #include <iostream>
 #include <string>
-#include <gtest/gtest.h>
-#include <iostream>
+//#include <gtest/gtest.h>
 
-#include "matrix.hpp"
-
+#include "../src/matrix.hpp"
+#include <vector>
 
 
 int test_init(){    
-    Matrix<int> m(3, 4);
+    Matrix<int> m1(3, 4);
     return 0;
 }
 
