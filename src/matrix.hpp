@@ -8,91 +8,78 @@
 #include <vector>
 #include <iostream>
 
-enum ImageColor {
-    RGB,
-    GRAYSCALE
-};
-
 
 // Declaration
 template <typename T>
 class Matrix{
     private:
-        T* buf; // The actual matrix of size mxn. Represented as an array with lenght mxn
-        int rows; // m
-        int cols; // n
-        ImageColor imageColor; // image type ie. RGB/Grayscale
+        size_t rows; 
+        size_t cols;
+        T* buf;
+
     public:
-        Matrix (size_t m, size_t n, ImageColor imageColor = RGB); 
+        Matrix (size_t m, size_t n);
+        Matrix& operator=(const Matrix& other);
         ~Matrix();
-        // T* operator [] (const int i);
-        // T & operator [] (const int i, const int j);
-        // T operator [] (const int i, const int j) const;
-        // T max();
+        T* at(size_t i, size_t j);
 };
+
 
 // Definitions
 
-
-
 /**
-* Constructs a matrix with shape mxn
+ * Constructor. Constructs a matrix with shape mxn
  *
- * ex: Matrix(m(3, 4)); -> constructs a 3x4x3 matrix that is continuous in memory
+ * ex: Matrix(m(3, 4)); -> constructs a 3x4  matrix that is continuous in memory
  * @param m -> number of rows
  * @param n -> number of columns
- * @param imageColor = RGB -> color type of image
  */
 template <typename T>
-Matrix<T>::Matrix(size_t m, size_t n, ImageColor imageColor){
+Matrix<T>::Matrix(size_t m, size_t n){
     this->rows = m;
     this->cols = n;
-    this->imageColor = imageColor;
-    this->buf = new T[m*n*imageColor];
+    this->buf = new T[m*n];
+}
+
+/** Copy Assignment Constructor. Constructs a Matrix given another Matrix
+ *  
+ *  ex: Matrix m1 = m2;
+ *  @param other -> reference to a Matrix
+ */
+template <typename T>
+Matrix<T>& Matrix<T>::operator=(const Matrix& other){
+    this->rows = other.rows;
+    this->cols = other.cols;
+    size_t mn = this->rows * this->cols;
+    this->buf = new T[mn];
+    for(size_t i = 0; i < mn; ++i){
+        buf[i] = other->buf[i];
+    } 
+    return *this;
 }
 
 
+
 /**
- * Destructs Matrix at the end of its lifecycle
+ * Destructs Matrix at the end of its lifecycle. Deallocates heap mem
  *  - Automatically called
- *  Deallocate buf
  */
 template <typename T>
 Matrix<T>::~Matrix(){
     delete[] buf;
 }
 
-// /*
-//  * Overloads [] and returns pointer to the first element in row i.
-//  * WARNING - If working with a row, must manually check the bounds to be within j
-//  * @param i 0-indexed row to be selected
-//  */
-// template <typename T>
-// T* &operator [] (const i){ 
-//     if(i < 0 || i > cols){
-//         throw::std_out_of_range("Out of range");
-//     }
-//     return buf[i * cols];
-// }
-// 
-// /*
-//  * Overloads [] and returns reference to value at [i,j]. Used in LHS
-//  * @param i row of element
-//  * @param j col of element
-//  */
-// T operator [] (const int i) const{
-//     
-// } 
-
-
 
 /**
- * Returns max value of the matrix
+ * Returns a pointer to the element at a given index
+ * @param i -> row index
+ * @param j -> col index
  */
-// template <typename T>
-// T Matrix<T>::max(){
-//     T maximum;
-// }
+template <typename T>
+T * Matrix<T>::at(size_t i, size_t j){
+    return buf + i*rows+j;
+}
+
 
 
 #endif

@@ -1,4 +1,1 @@
-/data/input/*
-/data/output/*
-/build/*
-**/*
+.DS_Store
