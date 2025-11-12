@@ -22,5 +22,9 @@ target_link_libraries(playground ${OpenCV_LIBS})
 add_executable(test_matrix tests/test_matrix.cpp)
 target_link_libraries(test_matrix gtest_main)
 
+add_executable(test_image tests/test_image.cpp src/image.cpp)
+target_link_libraries(test_image gtest_main)
+
 include(GoogleTest)
 gtest_discover_tests(test_matrix)
+gtest_discover_tests(test_image)
