@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.1)
+cmake_minimum_required(VERSION 3.27.0)
 project(test_matrix)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -16,13 +16,15 @@ enable_testing()
 find_package(OpenCV REQUIRED core highgui imgcodecs)    
 include_directories(${OpenCV_INCLUDE_DIRS})
 
+add_compile_options(-Wno-deprecated-enum-enum-conversion)
+
 add_executable(playground tests/playground.cpp)
 target_link_libraries(playground ${OpenCV_LIBS})
 
 add_executable(test_matrix tests/test_matrix.cpp)
 target_link_libraries(test_matrix gtest_main)
 
-add_executable(test_image tests/test_image.cpp src/image.cpp)
+add_executable(test_image tests/test_image.cpp)
 target_link_libraries(test_image gtest_main)
 
 include(GoogleTest)

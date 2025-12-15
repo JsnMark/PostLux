@@ -15,6 +15,7 @@ class Matrix{
         T* buf;
 
     public:
+        Matrix ();
         Matrix (size_t m, size_t n, size_t c);
         Matrix& operator=(const Matrix& other);
         Matrix (const Matrix& other);
@@ -30,12 +31,24 @@ class Matrix{
 // Definitions
 
 /**
+ * Constructor. Constructs an empty matrix
+ */
+template <typename T>
+Matrix<T>::Matrix(): 
+    rows{0},
+    cols{0},
+    channels{0},
+    buf{nullptr}
+{}
+
+
+/**
  * Constructor. Constructs a matrix with shape mxnxc. Order in mem is (0,0,0), ..., (0,0,c-1), (0,1,0), ..., (0, n-1, c-1), (1, 0, 0), ...
  *
  * ex: Matrix(m(3, 4, 1)); -> constructs a 3x4x1  matrix that is continuous in memory
- * @param m -> number of rows
- * @param n -> number of columns
- * @param c -> number of channels
+ * @param m number of rows
+ * @param n number of columns
+ * @param c number of channels
  */
 template <typename T>
 Matrix<T>::Matrix(size_t m, size_t n, size_t c)
@@ -48,7 +61,7 @@ Matrix<T>::Matrix(size_t m, size_t n, size_t c)
 /** Copy Constructor. Constructs a matrix given another matrix
  *
  * ex: Matrix<int> m1 = m2;
- * @param other -> reference to a Matrix
+ * @param other reference to a Matrix
  */
 template <typename T>
 Matrix<T>::Matrix(const Matrix<T>& other)
@@ -66,7 +79,8 @@ Matrix<T>::Matrix(const Matrix<T>& other)
 /** Copy Assignment. Assigns the matrix data given another Matrix
  *  
  *  ex: m1 = m2;
- *  @param other -> reference to a Matrix
+ *  @param other reference to a Matrix
+ *  @return pointer to this object
  */
 template <typename T>
 Matrix<T>& Matrix<T>::operator=(const Matrix& other){
@@ -100,9 +114,10 @@ Matrix<T>::~Matrix(){
 /**
  * Returns a pointer to the element at a given index. No bounds checking.
  *
- * @param i -> row index
- * @param j -> col index
- * @param c -> channel index
+ * @param i row index
+ * @param j col index
+ * @param c channel index
+ * @return pointer to the element
  */
 template <typename T>
 T * Matrix<T>::ptr(size_t i, size_t j, size_t c){
