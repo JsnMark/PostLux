@@ -26,6 +26,11 @@ TEST_F(MatrixTest, PtrWorks){
     EXPECT_EQ(10, *(m1_.ptr(1,1,1))); 
 }
 
+TEST_F(MatrixTest, PixelWorks){
+    *(m1_.ptr(0,0,0)) = 12;
+    EXPECT_EQ(m1_.pixel(0,0,0), 12); 
+}
+
 TEST_F(MatrixTest, CopyAssignmentWorks){
     m0_ = m1_;
     EXPECT_EQ(0, *(m0_.ptr(0,0,0)));

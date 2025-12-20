@@ -21,6 +21,7 @@ class Matrix{
         Matrix (const Matrix& other);
         ~Matrix();
 
+        T pixel(size_t i, size_t j, size_t c) const;
         T* ptr(size_t i, size_t j, size_t c);
         size_t getRow();
         size_t getCol();
@@ -122,6 +123,16 @@ Matrix<T>::~Matrix(){
 template <typename T>
 T * Matrix<T>::ptr(size_t i, size_t j, size_t c){
     return buf + i * cols * channels + j * channels + c;
+}
+/*
+ * Returns the pixel at the specified location
+ * @param i row index
+ * @param j col index
+ * @param c channel index
+ * @return value at the pixel
+ */
+template <typename T> T Matrix<T>::pixel(size_t i, size_t j, size_t c)const{
+    return *(buf + i * cols * channels + j * channels + c);
 }
 
 /** 

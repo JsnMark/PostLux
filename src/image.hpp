@@ -1,5 +1,8 @@
 // image.hpp
 
+// TODO
+// Opencv used as a placeholder until I decide to deal with loading and saving image file formats like .png and .jpg
+
 #ifndef IMAGE_HPP
 #define IMAGE_HPP
 
@@ -8,6 +11,8 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
+
+#include <iostream>
 
 #include "matrix.hpp"
 
@@ -24,13 +29,13 @@ class Image{
     public:
          Image(size_t m, size_t n, size_t c);
          Image(std::string filepath);
-         T getPixel(size_t i, size_t j, size_t c);
+         T getPixel(size_t i, size_t j, size_t c) const;
          T* getPtr(size_t i, size_t j, size_t c);
+         size_t getRows() const;
+         size_t getCols() const;
+         size_t getCha() const;
          void saveImage(std::string filepath);
-
-//         ~Image();
-//         Image(const Image& other);
-//         Image& operator=(const Image& other);
+         Image(const Image& other);
 };
 
 /*
@@ -49,8 +54,6 @@ Image<T>::Image(size_t m, size_t n, size_t c)
 {}
 
 /*
- * Opencv used as a placeholder until I decide to deal with loading and saving image file formats like .png and .jpg
- *
  * Consructs an image given its filename.
  *
  * @param filepath path to the image
@@ -63,7 +66,6 @@ Image<T>::Image(std::string filepath){
     rows = img.rows;
     cols = img.cols;
     channels = img.channels();
-
     data = Matrix<T> {rows, cols, channels};
     T* imgPtr = img.ptr<T>(0);
     T* dataPtr = data.ptr(0,0,0);
@@ -72,6 +74,28 @@ Image<T>::Image(std::string filepath){
         *dataPtr = *imgPtr;
         ++dataPtr;
         ++imgPtr;
+    }
+}
+
+
+/*
+ * Copy Constructor
+ */
+template<typename T>
+Image<T>::Image(const Image& other):
+    rows(other.rows),
+    cols(other.cols),
+    channels(other.channels),
+    data(Matrix<T> {other.rows, other.cols, other.channels})
+{
+    T* dataPtr = data.ptr(0,0,0);
+    for(int i = 0; i < rows; ++i){
+        for(int j = 0; j < cols; ++j){
+            for(int k = 0; k < channels; ++k){
+                *dataPtr = other.getPixel(i,j,k);
+                ++dataPtr;
+            }
+        }
     }
 }
 
@@ -84,8 +108,8 @@ Image<T>::Image(std::string filepath){
  * @return value at position (i,j,c)
  */
 template <typename T>
-T Image<T>::getPixel(size_t i, size_t j, size_t c){
-    return *(data.ptr(i, j, c));
+T Image<T>::getPixel(size_t i, size_t j, size_t c) const {
+    return data.pixel(i,j,c);
 }
 
 /*
@@ -101,17 +125,26 @@ T* Image<T>::getPtr(size_t i, size_t j, size_t c){
     return data.ptr(i,j,c);
 }
 
+template <typename T>
+size_t Image<T>::getRows()const{return rows;}
+
+template <typename T>
+size_t Image<T>::getCols()const{return cols;}
+
+template <typename T>
+size_t Image<T>::getCha()const{return channels;}
+
 
 /*
  * Saves the image
- *
- * Uses opencv as a placeholder. 16 = 8unsignedbits 3 channels
+ * For OpenCV, Assume all pixels are 8 bits with 3 channels fro rgb
  *
  * @param filepath filepath of the destination
  */
 template <typename T>
 void Image<T>::saveImage(std::string filepath){
-    Mat mat{rows, cols, CV_8UC3};
+
+    Mat mat(static_cast<int>(rows), static_cast<int>(cols), CV_8UC3);
     T* imgPtr = getPtr(0,0,0);
     for(int i = 0; i < rows; ++i){
         unsigned char* Mi = mat.ptr<unsigned char>(i);
@@ -124,10 +157,8 @@ void Image<T>::saveImage(std::string filepath){
         }
     }
 
-    std::cout << "Saving image" <<std::endl;
     imwrite(filepath, mat);
 }
-
 
 
 

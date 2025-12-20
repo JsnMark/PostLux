@@ -4,6 +4,8 @@ project(test_matrix)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "-g")
+SET(CMAKE_OSX_DEPLOYMENT_TARGET "14.0")
+  
 
 include(FetchContent)
 FetchContent_Declare(
@@ -25,7 +27,7 @@ add_executable(test_matrix tests/test_matrix.cpp)
 target_link_libraries(test_matrix gtest_main)
 
 add_executable(test_image tests/test_image.cpp)
-target_link_libraries(test_image gtest_main)
+target_link_libraries(test_image gtest_main ${OpenCV_LIBS})
 
 include(GoogleTest)
 gtest_discover_tests(test_matrix)

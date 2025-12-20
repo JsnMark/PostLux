@@ -5,6 +5,8 @@
 
 #include "../src/image.hpp"
 
+#define TEST_IMAGE "../data/test/black_and_white.png"
+
 // class ImageTest : public testing::Test {
  //    protected:
 
@@ -19,8 +21,69 @@ TEST(ImageTest, NoLeaks){
     EXPECT_EQ(0, 0);
 }
 
+TEST(ImageTest, LoadImageAndCheckDimensions){
+    Image<unsigned char> i {TEST_IMAGE};
+    EXPECT_EQ(i.getRows(), 8);
+    EXPECT_EQ(i.getCols(), 8);
+    EXPECT_EQ(i.getCha(), 3);
+}
+
+TEST(ImageTest, GetPtrWorks){
+    Image<unsigned char> i {TEST_IMAGE};
+    EXPECT_EQ(*(i.getPtr(0,0,0)), 0); 
+    EXPECT_EQ(*(i.getPtr(0,0,1)), 0); 
+    EXPECT_EQ(*(i.getPtr(0,0,2)), 0); 
+
+    EXPECT_EQ(*(i.getPtr(7,7,0)), 255); 
+    EXPECT_EQ(*(i.getPtr(7,7,1)), 255); 
+    EXPECT_EQ(*(i.getPtr(7,7,2)), 255); 
+}
+
 TEST(ImageTest, GetPixelWorks){
-    Image<int> i {1, 2, 3};
+    Image<unsigned char> i {TEST_IMAGE};
+    EXPECT_EQ(i.getPixel(0,0,0), 0); 
+    EXPECT_EQ(i.getPixel(0,0,1), 0); 
+    EXPECT_EQ(i.getPixel(0,0,2), 0); 
+
+    EXPECT_EQ(i.getPixel(7,7,0), 255); 
+    EXPECT_EQ(i.getPixel(7,7,1), 255); 
+    EXPECT_EQ(i.getPixel(7,7,2), 255); 
+}
+
+TEST(ImageTest, SaveImageWorks){
+    std::string dest {"../data/test/result.png"};
+    Image<unsigned char> image {TEST_IMAGE};
+    unsigned char* image_ptr = image.getPtr(0,0,0);
+    for(int i = 0; i < image.getRows(); ++i){
+        for(int j = 0; j < image.getCols(); ++j){
+            for(int c = 0; c < image.getCha(); ++c){
+                *image_ptr = 128;
+                ++image_ptr;
+            }
+        }
+    }
+    image.saveImage(dest);
+
+    Image<unsigned char> result {dest};
+    for(int i = 0; i < result.getRows(); ++i){
+        for(int j = 0; j < result.getCols(); ++j){
+            for(int c = 0; c < result.getCha(); ++c){
+                EXPECT_EQ(result.getPixel(i,j,c), 128); 
+            }
+        }
+    }
+}
+
+TEST(ImageTest, CopyConstructorWorks){
+    Image<unsigned char> image {TEST_IMAGE};
+    Image<unsigned char> copyImage (image);
+    for(int i = 0; i < image.getRows(); ++i){
+        for(int j = 0; j < image.getCols(); ++j){
+            for(int k = 0; k < image.getCha(); ++k){
+                EXPECT_EQ(image.getPixel(i,j,k), copyImage.getPixel(i,j,k));
+            }
+        }
+    }
 }
 
 int main(int argc, char** argv){
