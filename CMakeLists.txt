@@ -29,6 +29,9 @@ target_link_libraries(test_matrix gtest_main)
 add_executable(test_image tests/test_image.cpp)
 target_link_libraries(test_image gtest_main ${OpenCV_LIBS})
 
+add_executable(test_core tests/test_core.cpp)
+target_link_libraries(test_core gtest_main ${OpenCV_LIBS})
+
 include(GoogleTest)
 gtest_discover_tests(test_matrix)
 gtest_discover_tests(test_image)

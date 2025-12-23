@@ -27,6 +27,7 @@ class Image{
         Matrix<T> data;
 
     public:
+         Image();
          Image(size_t m, size_t n, size_t c);
          Image(std::string filepath);
          T getPixel(size_t i, size_t j, size_t c) const;
@@ -37,6 +38,18 @@ class Image{
          void saveImage(std::string filepath);
          Image(const Image& other);
 };
+
+/* 
+ * Default constructor with no parameters
+ */
+template <typename T>
+Image<T>::Image()
+    : rows{0}
+    , cols{0}
+    , channels{0}
+    , data{}
+{}
+
 
 /*
  * Constructor. Constructs image from its dimensions
