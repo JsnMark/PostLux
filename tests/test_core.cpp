@@ -52,6 +52,36 @@ TEST(SplitTest, SplitTestWorks){
     delete[] imageArr;
 }
 
+TEST(TestMerge, MergeWorks){
+    Image<unsigned char> im {TEST_IMAGE};
+    size_t m = im.getRows();
+    size_t n = im.getCols();
+    size_t c = im.getCha();
+    int val = 10;
+    for(int i = 0; i < m; ++i){
+        for(int j = 0; j < n; ++j){
+            *(im.getPtr(i,j,0)) = val;
+        }
+    }
+    Image<unsigned char>* imageArr = new Image<unsigned char>[c];
+    for(int i = 0; i < c; ++i){
+        imageArr[i] = Image<unsigned char> {m,n,1};
+    }
+
+    split(im, imageArr);
+    EXPECT_EQ(true, im == merge(imageArr));
+}
+
+TEST(TestMerge, MergeHandlesInvalidMerges){
+    Image<unsigned char> im1 {4,3,1};
+    Image<unsigned char> im2 {3,3,1};
+    Image<unsigned char> im3 {3,3,1};
+    Image<unsigned char> imageArr[3] {im1, im2, im3};
+
+    EXPECT_THROW(merge(imageArr, 0), std::invalid_argument);
+    EXPECT_THROW(merge(imageArr), std::runtime_error);
+}
+
 int main(int argc, char** argv){
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

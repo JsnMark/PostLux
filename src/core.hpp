@@ -30,7 +30,39 @@ void split(const Image<T>& src, Image<T>* destBegin){
     }
 }
 
+/*
+ * Merges multiple single channeled images into one multi channelled image
+ *  
+ * @param pointer to beginning of array of images to be merged
+ * @param numImages number of images to be merged
+ * @return result merged image
+ */
+template <typename T>
+Image<T> merge(Image<T>* srcBegin, size_t numImages = 3){
+    if(numImages <= 1){
+        throw std::invalid_argument("numImages must be greater than 1");
+    } 
+    // Ensure all correct dimensions
+    size_t rows = srcBegin->getRows();
+    size_t cols = srcBegin->getCols();
+    for(int curIm = 1; curIm < numImages; ++curIm){
+        if((srcBegin + curIm)->getRows() != rows ||
+           (srcBegin + curIm)->getCols() != cols ||
+           (srcBegin + curIm)->getCha() != 1){
+            throw std::runtime_error("Images have mismatched dimensions");
+        }
+    }
 
+    Image<T> result {rows, cols, numImages}; 
+    for(int i = 0; i < rows; ++i){
+        for(int j = 0; j < cols; ++j){
+            for(int k = 0; k < numImages; ++k){
+                *(result.getPtr(i,j,k)) = (srcBegin + k)->getPixel(i,j,0); 
+            }    
+        }
+    }
+    return result;
+}
 
 
 

@@ -37,6 +37,8 @@ class Image{
          size_t getCha() const;
          void saveImage(std::string filepath);
          Image(const Image& other);
+         bool operator==(const Image<T>& other) const;
+         bool operator!=(const Image<T>& other) const;
 };
 
 /* 
@@ -173,6 +175,43 @@ void Image<T>::saveImage(std::string filepath){
     imwrite(filepath, mat);
 }
 
+
+/*
+ * Equality operator. True when contents are same valued
+ *
+ * @param other other image to be compared
+ * @return true if equal, false if not equal
+ */
+template <typename T>
+bool Image<T>::operator==(const Image<T>& other) const{
+    if(other.getRows() != rows 
+       || other.getCols() != cols 
+       || other.getCha() != channels){
+        return false; 
+    } 
+
+    for(size_t i = 0; i < rows; ++i){
+        for(size_t j = 0; j < cols; ++j){
+            for(size_t k = 0; k < channels; ++k){
+                if(other.getPixel(i,j,k) != this->getPixel(i,j,k)){
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+/*
+ * Inequality operator
+ *
+ * @param other
+ * @return true if not equal, false if equal
+ */
+template <typename T>
+bool Image<T>::operator!=(const Image<T>& other) const{
+    return !(*this == other);
+}
 
 
 #endif

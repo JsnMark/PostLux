@@ -86,6 +86,24 @@ TEST(ImageTest, CopyConstructorWorks){
     }
 }
 
+TEST(ImageTest, EqualityWorks){
+    Image<unsigned char> image1 {TEST_IMAGE};
+    Image<unsigned char> image2 {TEST_IMAGE};
+    EXPECT_EQ(image1==image2, true);
+
+    *(image1.getPtr(1,1,1)) = image1.getPixel(1,1,1) + 1;
+    EXPECT_EQ(image1==image2, false);
+}
+
+TEST(ImageTest, InequalityWorks){
+    Image<unsigned char> image1 {TEST_IMAGE};
+    Image<unsigned char> image2 {TEST_IMAGE};
+    EXPECT_EQ(image1!=image2, false);
+
+    *(image1.getPtr(1,1,1)) = image1.getPixel(1,1,1) + 1;
+    EXPECT_EQ(image1!=image2, true);
+}
+
 int main(int argc, char** argv){
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
