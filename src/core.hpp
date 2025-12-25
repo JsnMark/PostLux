@@ -65,6 +65,44 @@ Image<T> merge(Image<T>* srcBegin, size_t numImages = 3){
 }
 
 
+enum Padding_type {
+    Constant
+};
+
+/*
+ * Pads the image
+ *
+ */
+template <typename T>
+Image<T> pad(const Image<T>& image, Padding_type paddingType, 
+             size_t top, size_t bottom, size_t left, size_t right,
+             T value=0){
+
+    size_t rows = image.getRows() + top + bottom;
+    size_t cols = image.getCols() + left + right;
+    size_t channels = image.getCha();
+    Image<T> newImage {rows, cols, channels};
+
+    size_t bottomIndex = rows - bottom;
+    size_t rightIndex = cols - right;
+    T* elementPtr = newImage.getPtr(0,0,0);
+    for(size_t i = 0; i < rows; ++i){
+        for(size_t j = 0; j < cols; ++j){
+            for(size_t k = 0; k < channels; ++k){
+                if(i < top || i >= bottomIndex || j < left || j >= rightIndex){
+                    *elementPtr = value;    
+                } else{
+                    *elementPtr = image.getPixel(i - left, j - right, k); 
+                }
+//                std::cout<< i << " " << j << " " << k << "->" << (int) *elementPtr << std::endl; 
+                elementPtr++; 
+            } 
+        }
+    }
+    return newImage;
+}
+
+
 
 
 #endif

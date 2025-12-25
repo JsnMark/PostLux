@@ -9,6 +9,28 @@
 
 #define TEST_IMAGE "../data/test/black_and_white.png"
 
+
+class PadTest : public testing::Test {
+    protected:
+        PadTest(){
+            for(size_t i = 0; i < rows_; ++i){
+                for(size_t j = 0; j < cols_; ++j){
+                    for(size_t k = 0; k < channels_; ++k){
+                        *(im.getPtr(i,j,k)) = val_;
+                    }
+                }
+            }
+        } 
+        size_t rows_ = 4;
+        size_t cols_ = 4;
+        size_t channels_ = 3;
+        unsigned char val_ = 255;
+        Image<unsigned char> im {rows_, cols_, channels_};
+};
+
+
+
+
 TEST(SplitTest, SplitTestWorks){
     Image<unsigned char> im {TEST_IMAGE};
     size_t m = im.getRows();
@@ -52,7 +74,7 @@ TEST(SplitTest, SplitTestWorks){
     delete[] imageArr;
 }
 
-TEST(TestMerge, MergeWorks){
+TEST(MergeTest, MergeWorks){
     Image<unsigned char> im {TEST_IMAGE};
     size_t m = im.getRows();
     size_t n = im.getCols();
@@ -72,7 +94,7 @@ TEST(TestMerge, MergeWorks){
     EXPECT_EQ(true, im == merge(imageArr));
 }
 
-TEST(TestMerge, MergeHandlesInvalidMerges){
+TEST(MergeTest, MergeHandlesInvalidMerges){
     Image<unsigned char> im1 {4,3,1};
     Image<unsigned char> im2 {3,3,1};
     Image<unsigned char> im3 {3,3,1};
@@ -80,6 +102,36 @@ TEST(TestMerge, MergeHandlesInvalidMerges){
 
     EXPECT_THROW(merge(imageArr, 0), std::invalid_argument);
     EXPECT_THROW(merge(imageArr), std::runtime_error);
+}
+
+TEST_F(PadTest, EvenConstantPaddingAll){
+    unsigned char val = im.getPixel(0,0,0); // 4x4 image with 255 as all values
+    Image<unsigned char> paddedImage = pad(im, Constant, 2, 2, 2, 2); // 8x8 image
+    
+    EXPECT_EQ(paddedImage.getRows(), 8);
+    EXPECT_EQ(paddedImage.getCols(), 8);
+    EXPECT_EQ(paddedImage.getCha(), 3);
+
+    for(size_t i = 0; i < 8; ++i){
+        for(size_t j = 0; j < 8; ++j){
+            for(size_t k = 0; k < 3; ++k){
+                int abc = 0;
+                if(i < 2){
+                    EXPECT_EQ(paddedImage.getPixel(i,j,k), 0);
+                } else if(i >= 6){
+                    EXPECT_EQ(paddedImage.getPixel(i,j,k), 0);
+                } else if(j < 2){
+                    EXPECT_EQ(paddedImage.getPixel(i,j,k), 0);
+                } else if(j >= 6){
+                    EXPECT_EQ(paddedImage.getPixel(i,j,k), 0);
+                } else {
+                    EXPECT_EQ(paddedImage.getPixel(i,j,k), 255);
+                }
+            }
+        }
+    } 
+
+
 }
 
 int main(int argc, char** argv){
