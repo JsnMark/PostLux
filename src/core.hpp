@@ -72,6 +72,14 @@ enum Padding_type {
 /*
  * Pads the image
  *
+ * @param image Image to be padded
+ * @param paddingType how the image will be padded {Constant}
+ * @param top rows padded on top
+ * @param bottom rows padded on bottom
+ * @param left cols padded on left
+ * @param right cols padded on right
+ * @param value value to be padded with. May not be used depending on paddingType
+ * @return newImage padded image
  */
 template <typename T>
 Image<T> pad(const Image<T>& image, Padding_type paddingType, 
