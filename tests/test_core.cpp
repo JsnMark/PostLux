@@ -130,9 +130,46 @@ TEST_F(PadTest, EvenConstantPaddingAll){
             }
         }
     } 
-
-
 }
+
+TEST(FilterValidateTest, FilterValidateWorks){
+    Image<int> image {10,10,3};
+    Matrix<int> filter {5,5,1};
+    EXPECT_FALSE(filterValidate(0, 0, image, filter));
+    EXPECT_FALSE(filterValidate(1, 1, image, filter));
+    EXPECT_FALSE(filterValidate(2, 1, image, filter));
+    EXPECT_TRUE(filterValidate(2, 2, image, filter));
+
+    EXPECT_FALSE(filterValidate(9, 9, image, filter));
+    EXPECT_FALSE(filterValidate(8, 8, image, filter));
+    EXPECT_FALSE(filterValidate(8, 7, image, filter));
+    EXPECT_TRUE(filterValidate(7, 7, image, filter));
+
+    Image<int> image1{11, 11, 3};
+    Matrix<int> filter1{5,5,1};
+    EXPECT_FALSE(filterValidate(0, 0, image1, filter1));
+    EXPECT_FALSE(filterValidate(1, 1, image1, filter1));
+    EXPECT_FALSE(filterValidate(2, 1, image1, filter1));
+    EXPECT_TRUE(filterValidate(2, 2, image1, filter1));
+
+    EXPECT_FALSE(filterValidate(10, 10, image1, filter1));
+    EXPECT_FALSE(filterValidate(9, 9, image1, filter1));
+    EXPECT_FALSE(filterValidate(9, 8, image1, filter1));
+    EXPECT_TRUE(filterValidate(8, 8, image1, filter1));
+}
+
+//TEST(FilterTest, FilterThrowsException){
+//
+//     Image<int> i0{0,0,0};
+//     Matrix<int> f0{3,3,1};
+//     EXPECT_THROW(filterValidate(0, 0, i0, f0), std::runtime_error);
+//     Image<int> i1{5,5,3};
+//     Matrix<int> f1{3,3,2};
+//     EXPECT_THROW(filterValidate(0, 0, i1, f1), std::runtime_error);
+//     Image<int> i2{5,5,3};
+//     Matrix<int> f2{2,2,1};
+//     EXPECT_THROW(filterValidate(0, 0, i2, f2), std::runtime_error);
+//}
 
 int main(int argc, char** argv){
     ::testing::InitGoogleTest(&argc, argv);

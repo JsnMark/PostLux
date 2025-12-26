@@ -102,7 +102,6 @@ Image<T> pad(const Image<T>& image, Padding_type paddingType,
                 } else{
                     *elementPtr = image.getPixel(i - left, j - right, k); 
                 }
-//                std::cout<< i << " " << j << " " << k << "->" << (int) *elementPtr << std::endl; 
                 elementPtr++; 
             } 
         }
@@ -111,6 +110,84 @@ Image<T> pad(const Image<T>& image, Padding_type paddingType,
 }
 
 
+/*
+ * Helper function for filter. Returns true if can apply filter at that pixel
+ *
+ * @param i row index of pixel
+ * @param j col index of pixel
+ * @param image
+ * @param filter
+ * @return bool true if valid pixel for filtering. Else false
+ */
+template <typename T>
+bool filterValidate(const size_t& i, const size_t& j, const Image<T>& image, Matrix<T>& filter){
+    size_t x = filter.getRow() / 2;
+    size_t y = filter.getCol() / 2;
+    if(i < x)
+        return false;
+    if(j < y)
+        return false;
+    if((image.getRows() - i) < (x + 1))
+        return false;
+    if((image.getCols() - j) < (y + 1))
+        return false;
+    return true;
+}
+
+/*
+ * Returns value of the pixel after applying filter to image. 
+ *
+ * @param x row number
+ * @param y col number
+ * @param z channel number
+ * @param image
+ * @param filter
+ * @return sum value of the pixel.
+ */
+template <typename T>
+double applyFilter(size_t x, size_t y, size_t z, const Image<T>& image, const Matrix<T>& filter){
+    int a = (int) filter.getRow() / 2;
+    int b = (int) filter.getCol() / 2;
+    T sum = 0;
+    for(int i = - a; i <= a; ++i){
+        for(int j = -b; j <= b; ++j){
+           sum += filter.getPixel(i,j,0) * image.getPixel(x-i,y-j,z);  
+        }
+    } 
+    return sum;
+}
+
+
+/*
+ * Applies a filter to an image using convolution. Caller must pad image if required
+ *
+ * @param image Image to be convolved. May be modified if inplace=true 
+ * @param filter Matrix filter used in convolution
+ */
+template <typename T>
+void filter(Image<T>& image, Matrix<T>& filter){
+    size_t mI = image.getRows();
+    size_t nI = image.getCols();
+    size_t cI = image.getCha();
+    size_t mF = filter.getRow();
+    size_t nF = filter.getCol();
+    size_t cF = filter.getCha();
+
+    // Filter smaller than image, single channeled, odd length and width
+    if((mF > mI) || (nF > nI) || (cF != 1) || ((mF % 2) == 0) || ((nF % 2) == 0)){
+        throw std::runtime_error("Incorrect filter dimensions");
+    }
+
+    for(size_t i = 0; i < mI; ++i){
+        for(size_t j = 0; j < nI; ++j){
+            if (filterValidate(i, j, image, filter)){
+                for(size_t k = 0; k < cI; ++k){
+                    applyFilter(i,j,k, image, filter);
+                }
+            }
+        }
+    } 
+} 
 
 
 #endif
