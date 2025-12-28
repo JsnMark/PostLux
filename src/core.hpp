@@ -135,7 +135,7 @@ bool filterValidate(const size_t& i, const size_t& j, const Image<T>& image, Mat
 }
 
 /*
- * Returns value of the pixel after applying filter to image. 
+ * Returns value of the pixel after applying filter to image. X,Y coordinates correspond to middle of the filter 
  *
  * @param x row number
  * @param y col number
@@ -145,13 +145,14 @@ bool filterValidate(const size_t& i, const size_t& j, const Image<T>& image, Mat
  * @return sum value of the pixel.
  */
 template <typename T>
-double applyFilter(size_t x, size_t y, size_t z, const Image<T>& image, const Matrix<T>& filter){
+double applyFilter(int x, int y, int z, const Image<T>& image, const Matrix<T>& filter){
     int a = (int) filter.getRow() / 2;
     int b = (int) filter.getCol() / 2;
     T sum = 0;
+
     for(int i = - a; i <= a; ++i){
         for(int j = -b; j <= b; ++j){
-           sum += filter.getPixel(i,j,0) * image.getPixel(x-i,y-j,z);  
+           sum += filter.pixel(i+a,j+b,0) * image.getPixel(x-i,y-j,z);  
         }
     } 
     return sum;
@@ -160,6 +161,7 @@ double applyFilter(size_t x, size_t y, size_t z, const Image<T>& image, const Ma
 
 /*
  * Applies a filter to an image using convolution. Caller must pad image if required
+ * Won't explicitly handle types
  *
  * @param image Image to be convolved. May be modified if inplace=true 
  * @param filter Matrix filter used in convolution
@@ -171,18 +173,18 @@ void filter(Image<T>& image, Matrix<T>& filter){
     size_t cI = image.getCha();
     size_t mF = filter.getRow();
     size_t nF = filter.getCol();
-    size_t cF = filter.getCha();
+    size_t cF = filter.getCh();
 
     // Filter smaller than image, single channeled, odd length and width
     if((mF > mI) || (nF > nI) || (cF != 1) || ((mF % 2) == 0) || ((nF % 2) == 0)){
         throw std::runtime_error("Incorrect filter dimensions");
     }
-
+    Image<T> imageCpy {image};
     for(size_t i = 0; i < mI; ++i){
         for(size_t j = 0; j < nI; ++j){
             if (filterValidate(i, j, image, filter)){
                 for(size_t k = 0; k < cI; ++k){
-                    applyFilter(i,j,k, image, filter);
+                    *(image.getPtr(i,j,k)) = applyFilter(i,j,k, imageCpy, filter);
                 }
             }
         }

@@ -104,6 +104,29 @@ TEST(ImageTest, InequalityWorks){
     EXPECT_EQ(image1!=image2, true);
 }
 
+TEST(ImageTest, FillWorks){
+    Image<int> image {3,3,3};
+    int val = 1;
+    image.fill(val);
+    for(int i = 0; i < image.getRows(); ++i){
+        for(int j = 0; j < image.getCols(); ++j){
+            for(int k = 0; k < image.getCha(); ++k){
+                EXPECT_EQ(image.getPixel(i,j,k), val);
+            }
+        }
+    }
+    EXPECT_THROW(image.fill(3, 100), std::runtime_error);
+
+    Image<int> image1{2,2,1};
+    std::vector<int> vec {1,2,3,4};
+    image1.fill(vec);
+    int* p = image1.getPtr(0,0,0);
+    for(int i = 0; i < 4; ++i){
+        EXPECT_EQ(vec.at(i), *p);
+        ++p;
+    }
+}
+
 int main(int argc, char** argv){
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

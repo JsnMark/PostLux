@@ -158,18 +158,90 @@ TEST(FilterValidateTest, FilterValidateWorks){
     EXPECT_TRUE(filterValidate(8, 8, image1, filter1));
 }
 
-//TEST(FilterTest, FilterThrowsException){
-//
-//     Image<int> i0{0,0,0};
-//     Matrix<int> f0{3,3,1};
-//     EXPECT_THROW(filterValidate(0, 0, i0, f0), std::runtime_error);
-//     Image<int> i1{5,5,3};
-//     Matrix<int> f1{3,3,2};
-//     EXPECT_THROW(filterValidate(0, 0, i1, f1), std::runtime_error);
-//     Image<int> i2{5,5,3};
-//     Matrix<int> f2{2,2,1};
-//     EXPECT_THROW(filterValidate(0, 0, i2, f2), std::runtime_error);
-//}
+
+TEST(ApplyFilterTest, SimpleApplyFilterWorks){
+    Image<int> image {3,3,1};
+    image.fill(3);
+    Matrix<int> kernel {3,3,1};
+    kernel.fill(1);
+    int sum = applyFilter(1,1,0, image, kernel);
+    EXPECT_EQ(sum, 27);
+
+    *(kernel.ptr(1,1,1)) = -1;
+    sum = applyFilter(1,1,0, image, kernel);
+    EXPECT_EQ(sum, 21);
+}
+
+TEST(ApplyFilterTest, ApplyFilterWorksDirection){
+    Image<int> image1 {3,3,1};
+    image1.fill(std::vector<int> {1,2,3,4,5,6,7,8,9});
+    Matrix<int> kernel1{3,3,1};
+    kernel1.fill(std::vector<int> {-1,1,-2, 2,10,3, -3,4,-4});
+    // -4*1 + 4*2 + -3*3
+    // +3*4 + 10*5 + 2*6
+    // -2*7 + 1*8 + -1*9
+    // = 54
+    EXPECT_EQ(applyFilter(1,1,0, image1, kernel1), 54);
+}
+
+TEST(FilterTest, FilterThrowsException){
+
+     Image<int> i0{0,0,0};
+     Matrix<int> f0{3,3,1};
+     EXPECT_THROW(filter(i0, f0), std::runtime_error);
+     Image<int> i1{5,5,3};
+     Matrix<int> f1{3,3,2};
+     EXPECT_THROW(filter(i1, f1), std::runtime_error);
+     Image<int> i2{5,5,3};
+     Matrix<int> f2{2,2,1};
+     EXPECT_THROW(filter(i2, f2), std::runtime_error);
+}
+
+TEST(FilterTest, FilterMultipleChannelsWorks){
+    Image<int> image1 {3,3,3};
+    image1.fill(0, 0);
+    image1.fill(100, 1);
+    image1.fill(200, 2);
+
+    Matrix<int> kernel1 {3,3,1};
+    kernel1.fill(std::vector{1,1,1,
+                            1,0,1,
+                            1,1,1});
+    filter(image1, kernel1);
+    
+    Image<int>* imageArr  = new Image<int>[image1.getCha()];
+    for(int i = 0; i < image1.getCha(); ++i){
+        imageArr[i] = Image<int> {image1.getRows(), image1.getCols(), 1};
+    } 
+    split(image1, imageArr);
+    EXPECT_EQ(800, imageArr[1].getPixel(1,1,0));
+    EXPECT_EQ(1600, imageArr[2].getPixel(1,1,0));
+    EXPECT_EQ(100, imageArr[1].getPixel(0,0,0));
+    EXPECT_EQ(200, imageArr[2].getPixel(2,2,0));
+}
+
+TEST(FilterTest, FilterWorks){
+    Image<int> image1{5,5,1};
+    image1.fill(std::vector<int> {0,0,0,0,0,
+                                  0,2,2,2,0,
+                                  0,2,5,2,0,
+                                  0,2,2,2,0,
+                                  0,0,0,0,0});
+
+    Matrix<int> kernel1 {3,3,1};
+    kernel1.fill(std::vector<int> {0,1,0,
+                                   1,2,1,
+                                   0,1,0});
+
+    filter(image1, kernel1);
+    Image<int> validate{5,5,1};
+    validate.fill(std::vector<int> {0, 0, 0, 0, 0,
+                                    0, 8,13, 8, 0,
+                                    0,13,18,13, 0,
+                                    0, 8,13, 8, 0,
+                                    0, 0, 0, 0, 0});
+    EXPECT_TRUE(validate == image1);
+}
 
 int main(int argc, char** argv){
     ::testing::InitGoogleTest(&argc, argv);

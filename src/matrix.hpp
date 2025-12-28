@@ -4,6 +4,7 @@
 #define MATRIX_HPP
 
 #include <cstddef>
+#include <vector>
 
 // Declaration
 template <typename T>
@@ -23,9 +24,11 @@ class Matrix{
 
         T pixel(size_t i, size_t j, size_t c) const;
         T* ptr(size_t i, size_t j, size_t c);
-        size_t getRow();
-        size_t getCol();
-        size_t getCh();
+        size_t getRow() const;
+        size_t getCol() const;
+        size_t getCh() const;
+        void fill(T value, int c=-1);
+        void fill(std::vector<T> vec, int c=-1);
 };
 
 
@@ -131,7 +134,7 @@ T * Matrix<T>::ptr(size_t i, size_t j, size_t c){
  * @param c channel index
  * @return value at the pixel
  */
-template <typename T> T Matrix<T>::pixel(size_t i, size_t j, size_t c)const{
+template <typename T> T Matrix<T>::pixel(size_t i, size_t j, size_t c) const{
     return *(buf + i * cols * channels + j * channels + c);
 }
 
@@ -139,19 +142,77 @@ template <typename T> T Matrix<T>::pixel(size_t i, size_t j, size_t c)const{
  * Returns Number of Rows
  */
 template <typename T>
-size_t Matrix<T>::getRow(){return rows;}
+size_t Matrix<T>::getRow()const{return rows;}
 
 /**
  * Returns Number of Columns
  */
 template <typename T>
-size_t Matrix<T>::getCol(){return cols;}
+size_t Matrix<T>::getCol()const{return cols;}
 
 /**
  * Returns Number of Channels
  */
 template <typename T>
-size_t Matrix<T>::getCh(){return channels;}
+size_t Matrix<T>::getCh()const{return channels;}
+
+/* 
+ * Fills matrix with a value at channel c. If c == -1, fills everything
+ * 
+ * @param value
+ * @param c
+ */
+template <typename T>
+void Matrix<T>::fill(T value, int c){
+    if(c >= (int) channels){// assume channels will not overflow
+        throw(std::runtime_error("C is too large"));
+    }
+    if(c < -1){
+        throw(std::runtime_error("C is too small"));
+    }
+
+    for(size_t i = 0; i < rows; ++i){
+        for(size_t j = 0; j < cols; ++j){
+            for(size_t k = 0; k < channels; ++k){
+                if(c == -1 || k == c){
+                    *(this->ptr(i,j,k)) = value;
+                }
+            }
+        }
+    }
+}
+
+/*
+ * Fills matrix with a vector at specified channel
+ *
+ * @param vec vector of elements
+ * @param c channel index. if -1, then fill entire matrix
+ */
+template <typename T>
+void Matrix<T>::fill(std::vector<T> vec, int c){
+    if(c > (int) channels)
+        throw(std::runtime_error("c is too large"));
+    if(c < -1)
+        throw(std::runtime_error("c is too small"));
+    if(c == -1 && vec.size() != (rows * cols * channels))
+        throw(std::runtime_error("size of vector incorrect"));
+    if(c != -1 && vec.size() != (rows * cols))
+        throw(std::runtime_error("size of vector incorrect"));
+
+    size_t vec_idx = 0;
+    for(int i = 0; i < rows; ++i){
+        for(int j = 0; j < cols; ++j){
+            for(int k = 0; k < channels; ++k){
+                if(c == -1 || k == c){
+                    *(this->ptr(i,j,k)) = vec.at(vec_idx);
+                    ++vec_idx;
+                } 
+            }
+        }
+    }
+}
+
+
 
 
 #endif

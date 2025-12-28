@@ -51,6 +51,84 @@ TEST_F(MatrixTest, GetWorks){
     EXPECT_EQ(3, m1_.getCh());
 }
 
+TEST_F(MatrixTest, FillWorks){
+    Matrix<int> mat1 {3,3,3};
+    int val = 100;
+    mat1.fill(val);
+    for(int i = 0; i < mat1.getRow(); ++i){
+        for(int j = 0; j < mat1.getCol(); ++j){
+            for(int k = 0; k < mat1.getCh(); ++k){
+                EXPECT_EQ(mat1.pixel(i,j,k), val);
+            }
+        }
+    } 
+    int val1 = 67;
+    mat1.fill(val1, 1);
+    for(int i = 0; i < mat1.getRow(); ++i){
+        for(int j = 0; j < mat1.getCol(); ++j){
+            for(int k = 0; k < mat1.getCh(); ++k){
+                if(k == 1){
+                    EXPECT_EQ(mat1.pixel(i,j,k), val1);
+                } else{
+                    EXPECT_EQ(mat1.pixel(i,j,k), val);
+                }
+            }
+        }
+    } 
+}
+
+TEST_F(MatrixTest, FillThrows){
+    Matrix<int> mat {3,3,3};
+    EXPECT_THROW(mat.fill(0, 5), std::runtime_error);
+}
+
+TEST_F(MatrixTest, FillVectorWorks){
+    Matrix<int> mat {3,3,1};
+    std::vector<int> vec {1,2,3,4,5,6,7,8,9};
+    mat.fill(vec);
+    int* ptr = mat.ptr(0,0,0);
+    for(int i = 0; i < 9; ++i){
+        EXPECT_EQ(*ptr, vec.at(i));
+        ++ptr; 
+    }
+
+    Matrix<int> mat1 {2,3,2};
+    std::vector<int> vec1{0,1, 2,3, 4,5,
+                         6,7, 8,9, 10,11};
+    mat1.fill(vec1);
+    ptr = mat1.ptr(0,0,0);
+    for(int i = 0; i < 12; ++i){
+        EXPECT_EQ(*ptr, vec1.at(i));
+        ++ptr; 
+    }
+
+    Matrix<int> mat2{3,3,3};
+    mat2.fill(0);
+    std::vector<int> vec2{1,1,1,
+                         1,1,1,
+                         1,1,1};
+    mat2.fill(vec2, 1);
+    for(int i = 0; i < mat2.getRow(); ++i){
+        for(int j = 0; j < mat2.getCol(); ++j){
+            for(int k = 0; k < mat2.getCh(); ++k){
+                if(k == 1)
+                    EXPECT_EQ(mat2.pixel(i,j,k), 1);
+                else
+                    EXPECT_EQ(mat2.pixel(i,j,k), 0);
+            }
+        }
+    }
+}
+
+TEST_F(MatrixTest, FillVectorThrows){
+    Matrix<int> mat {2,2,3};
+    std::vector<int> vec0 {1,2,3,4,5,6,7,8,9,10,11,12};
+    std::vector<int> vec1 {0};
+    EXPECT_THROW(mat.fill(vec0, -3), std::runtime_error);
+    EXPECT_THROW(mat.fill(vec0, 30), std::runtime_error);
+    EXPECT_THROW(mat.fill(vec1), std::runtime_error);
+    EXPECT_THROW(mat.fill(vec1, 0), std::runtime_error); 
+}
 
 int main(int argc, char **argv){
     ::testing::InitGoogleTest(&argc, argv);

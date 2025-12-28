@@ -35,10 +35,12 @@ class Image{
          size_t getRows() const;
          size_t getCols() const;
          size_t getCha() const;
-         void saveImage(std::string filepath);
+         void saveImage(std::string filepath) const;
          Image(const Image& other);
          bool operator==(const Image<T>& other) const;
          bool operator!=(const Image<T>& other) const;
+         void fill(T value, int channel=-1);
+         void fill(std::vector<T> vec, int channel=-1);
 };
 
 /* 
@@ -123,7 +125,7 @@ Image<T>::Image(const Image& other):
  * @return value at position (i,j,c)
  */
 template <typename T>
-T Image<T>::getPixel(size_t i, size_t j, size_t c) const {
+T Image<T>::getPixel(size_t i, size_t j, size_t c)const{
     return data.pixel(i,j,c);
 }
 
@@ -157,16 +159,14 @@ size_t Image<T>::getCha()const{return channels;}
  * @param filepath filepath of the destination
  */
 template <typename T>
-void Image<T>::saveImage(std::string filepath){
+void Image<T>::saveImage(std::string filepath)const{
 
     Mat mat(static_cast<int>(rows), static_cast<int>(cols), CV_8UC3);
-    T* imgPtr = getPtr(0,0,0);
     for(int i = 0; i < rows; ++i){
         unsigned char* Mi = mat.ptr<unsigned char>(i);
         for(int j = 0; j < cols; ++j){
             for(int k = 0; k < channels; ++k){
-                Mi[j * channels + k] = *imgPtr; 
-                ++imgPtr;
+                Mi[j * channels + k] = getPixel(i,j,k); 
             }
           
         }
@@ -183,7 +183,7 @@ void Image<T>::saveImage(std::string filepath){
  * @return true if equal, false if not equal
  */
 template <typename T>
-bool Image<T>::operator==(const Image<T>& other) const{
+bool Image<T>::operator==(const Image<T>& other)const{
     if(other.getRows() != rows 
        || other.getCols() != cols 
        || other.getCha() != channels){
@@ -209,9 +209,27 @@ bool Image<T>::operator==(const Image<T>& other) const{
  * @return true if not equal, false if equal
  */
 template <typename T>
-bool Image<T>::operator!=(const Image<T>& other) const{
+bool Image<T>::operator!=(const Image<T>& other)const{
     return !(*this == other);
 }
+
+/*
+ * Fills image with a value at specified channel
+ * 
+ * @param value 
+ * @param channel
+ */
+template <typename T>
+void Image<T>::fill(T value, int channel){
+    data.fill(value, channel);    
+}
+
+template<typename T>
+void Image<T>::fill(std::vector<T> vec, int channel){
+    data.fill(vec, channel);
+}
+
+
 
 
 #endif
