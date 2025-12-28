@@ -84,11 +84,12 @@ Image<T>::Image(std::string filepath){
     cols = img.cols;
     channels = img.channels();
     data = Matrix<T> {rows, cols, channels};
-    T* imgPtr = img.ptr<T>(0);
+
+    unsigned char* imgPtr = img.ptr<unsigned char>(0);
     T* dataPtr = data.ptr(0,0,0);
     int len = rows * cols * channels;
     for(int i = 0; i < len; ++i){
-        *dataPtr = *imgPtr;
+        *dataPtr = (T) *imgPtr;
         ++dataPtr;
         ++imgPtr;
     }
