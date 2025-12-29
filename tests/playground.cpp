@@ -10,7 +10,6 @@
 
 using namespace cv;
 
-//typedef std::vector<std::vector<std::vector<int>>> image_vector;
 
 int main(int argc, char** argv){
     Image<int> image {"../data/input/cind.jpg"};
