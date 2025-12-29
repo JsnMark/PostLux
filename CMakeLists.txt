@@ -3,7 +3,7 @@ project(test_matrix)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-g")
+set(CMAKE_CXX_FLAGS "-g -Wall -Wextra -Wpedantic -fsanitize=address,undefined")
 SET(CMAKE_OSX_DEPLOYMENT_TARGET "14.0")
   
 
