@@ -29,6 +29,7 @@ struct Image{
     Image(size_t m, size_t n, size_t c);
     Image(std::string filepath);
     Image(const Image& other);
+    Image& operator=(const Image& other);
 
     bool operator==(const Image<T>& other) const;
     bool operator!=(const Image<T>& other) const;
@@ -98,12 +99,24 @@ Image<T>::Image(std::string filepath){
  * Copy Constructor
  */
 template<typename T>
-Image<T>::Image(const Image& other):
+Image<T>::Image(const Image<T>& other):
     rows{other.rows},
     cols{other.cols},
     channels{other.channels},
     data{other.data}
 {}
+
+/* Copy assignment
+ */
+template <typename T>
+Image<T>& Image<T>::operator=(const Image<T>& other)
+{
+    rows = other.rows;
+    cols = other.cols;
+    channels = other.channels;
+    data = other.data;
+    return *this;
+}
 
 /**
  * Returns the value of the pixel at position (i,j,k)

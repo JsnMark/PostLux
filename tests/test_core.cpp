@@ -16,7 +16,7 @@ class PadTest : public testing::Test {
             for(size_t i = 0; i < rows_; ++i){
                 for(size_t j = 0; j < cols_; ++j){
                     for(size_t k = 0; k < channels_; ++k){
-                        *(im.getPtr(i,j,k)) = val_;
+                        *(im.ptr(i,j,k)) = val_;
                     }
                 }
             }
@@ -33,41 +33,41 @@ class PadTest : public testing::Test {
 
 TEST(SplitTest, SplitTestWorks){
     Image<unsigned char> im {TEST_IMAGE};
-    size_t m = im.getRows();
-    size_t n = im.getCols();
-    size_t c = im.getCha();
+    size_t m = im.rows;
+    size_t n = im.cols;
+    size_t c = im.channels;
     // Make first channel of image all 10
-    int val = 10;
-    for(int i = 0; i < m; ++i){
-        for(int j = 0; j < n; ++j){
-            *(im.getPtr(i,j,0)) = val;
+    unsigned char val = 10;
+    for(size_t i = 0; i < m; ++i){
+        for(size_t j = 0; j < n; ++j){
+            *(im.ptr(i,j,0)) = val;
         }
     }
     
     Image<unsigned char>* imageArr = new Image<unsigned char>[c];
 
-    for(int i = 0; i < c; ++i){
+    for(size_t i = 0; i < c; ++i){
         imageArr[i] = Image<unsigned char> {m,n,1};
     }
 
     split(im, imageArr);
     // Check same width and height, but single channeled
-    for(int i = 0; i < c; ++i){
-        EXPECT_EQ((imageArr + i)->getRows(), m);
-        EXPECT_EQ((imageArr + i)->getCols(), m);
-        EXPECT_EQ((imageArr + i)->getCha(), 1);
+    for(size_t i = 0; i < c; ++i){
+        EXPECT_EQ((imageArr + i)->rows, m);
+        EXPECT_EQ((imageArr + i)->cols, m);
+        EXPECT_EQ((imageArr + i)->channels, 1);
     }
     // Check correct values for first channel
-    for(int i = 0; i < m; ++i){
-        for(int j = 0; j < n; ++j){
-            EXPECT_EQ(imageArr->getPixel(i,j,0), val);
+    for(size_t i = 0; i < m; ++i){
+        for(size_t j = 0; j < n; ++j){
+            EXPECT_EQ(imageArr->pixel(i,j,0), val);
         }
     }
     // Check correct values for rest of channels
-    for(int k = 1; k < c; ++k){
-        for(int i = 0; i < m; ++i){
-            for(int j = 0; j < n; ++j){
-                EXPECT_EQ((imageArr + k)->getPixel(i,j,0), im.getPixel(i,j,k)); 
+    for(size_t k = 1; k < c; ++k){
+        for(size_t i = 0; i < m; ++i){
+            for(size_t j = 0; j < n; ++j){
+                EXPECT_EQ((imageArr + k)->pixel(i,j,0), im.pixel(i,j,k)); 
             }
         }
     }
@@ -76,17 +76,17 @@ TEST(SplitTest, SplitTestWorks){
 
 TEST(MergeTest, MergeWorks){
     Image<unsigned char> im {TEST_IMAGE};
-    size_t m = im.getRows();
-    size_t n = im.getCols();
-    size_t c = im.getCha();
-    int val = 10;
-    for(int i = 0; i < m; ++i){
-        for(int j = 0; j < n; ++j){
-            *(im.getPtr(i,j,0)) = val;
+    size_t m = im.rows;
+    size_t n = im.cols;
+    size_t c = im.channels;
+    unsigned char val = 10;
+    for(size_t i = 0; i < m; ++i){
+        for(size_t j = 0; j < n; ++j){
+            *(im.ptr(i,j,0)) = val;
         }
     }
     Image<unsigned char>* imageArr = new Image<unsigned char>[c];
-    for(int i = 0; i < c; ++i){
+    for(size_t i = 0; i < c; ++i){
         imageArr[i] = Image<unsigned char> {m,n,1};
     }
 
@@ -105,27 +105,25 @@ TEST(MergeTest, MergeHandlesInvalidMerges){
 }
 
 TEST_F(PadTest, EvenConstantPaddingAll){
-    unsigned char val = im.getPixel(0,0,0); // 4x4 image with 255 as all values
     Image<unsigned char> paddedImage = pad(im, Constant, 2, 2, 2, 2); // 8x8 image
     
-    EXPECT_EQ(paddedImage.getRows(), 8);
-    EXPECT_EQ(paddedImage.getCols(), 8);
-    EXPECT_EQ(paddedImage.getCha(), 3);
+    EXPECT_EQ(paddedImage.rows, 8);
+    EXPECT_EQ(paddedImage.cols, 8);
+    EXPECT_EQ(paddedImage.channels, 3);
 
     for(size_t i = 0; i < 8; ++i){
         for(size_t j = 0; j < 8; ++j){
             for(size_t k = 0; k < 3; ++k){
-                int abc = 0;
                 if(i < 2){
-                    EXPECT_EQ(paddedImage.getPixel(i,j,k), 0);
+                    EXPECT_EQ(paddedImage.pixel(i,j,k), 0);
                 } else if(i >= 6){
-                    EXPECT_EQ(paddedImage.getPixel(i,j,k), 0);
+                    EXPECT_EQ(paddedImage.pixel(i,j,k), 0);
                 } else if(j < 2){
-                    EXPECT_EQ(paddedImage.getPixel(i,j,k), 0);
+                    EXPECT_EQ(paddedImage.pixel(i,j,k), 0);
                 } else if(j >= 6){
-                    EXPECT_EQ(paddedImage.getPixel(i,j,k), 0);
+                    EXPECT_EQ(paddedImage.pixel(i,j,k), 0);
                 } else {
-                    EXPECT_EQ(paddedImage.getPixel(i,j,k), 255);
+                    EXPECT_EQ(paddedImage.pixel(i,j,k), 255);
                 }
             }
         }
@@ -209,15 +207,15 @@ TEST(FilterTest, FilterMultipleChannelsWorks){
                             1,1,1});
     filter(image1, kernel1);
     
-    Image<int>* imageArr  = new Image<int>[image1.getCha()];
-    for(int i = 0; i < image1.getCha(); ++i){
-        imageArr[i] = Image<int> {image1.getRows(), image1.getCols(), 1};
+    Image<int>* imageArr  = new Image<int>[image1.channels];
+    for(size_t i = 0; i < image1.channels; ++i){
+        imageArr[i] = Image<int> {image1.rows, image1.cols, 1};
     } 
     split(image1, imageArr);
-    EXPECT_EQ(800, imageArr[1].getPixel(1,1,0));
-    EXPECT_EQ(1600, imageArr[2].getPixel(1,1,0));
-    EXPECT_EQ(100, imageArr[1].getPixel(0,0,0));
-    EXPECT_EQ(200, imageArr[2].getPixel(2,2,0));
+    EXPECT_EQ(800, imageArr[1].pixel(1,1,0));
+    EXPECT_EQ(1600, imageArr[2].pixel(1,1,0));
+    EXPECT_EQ(100, imageArr[1].pixel(0,0,0));
+    EXPECT_EQ(200, imageArr[2].pixel(2,2,0));
 }
 
 TEST(FilterTest, FilterWorks){
