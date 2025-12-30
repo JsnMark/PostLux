@@ -5,44 +5,41 @@
 
 #include <cstddef>
 #include <vector>
+#include <string>
+#include <format>
+#include <algorithm>
 
 // Declaration
 template <typename T>
-class Matrix{
-    private:
-        size_t rows; 
-        size_t cols;
-        size_t channels;
-        T* buf;
+struct Matrix{
+    size_t rows; 
+    size_t cols;
+    size_t channels;
+    std::vector<T> buf;
 
-    public:
-        Matrix ();
-        Matrix (size_t m, size_t n, size_t c);
-        Matrix& operator=(const Matrix& other);
-        Matrix (const Matrix& other);
-        ~Matrix();
+    Matrix ();
+    Matrix (size_t m, size_t n, size_t c);
+    Matrix& operator=(const Matrix& other);
+    Matrix (const Matrix& other);
+    ~Matrix();
 
-        T pixel(size_t i, size_t j, size_t c) const;
-        T* ptr(size_t i, size_t j, size_t c);
-        size_t getRow() const;
-        size_t getCol() const;
-        size_t getCh() const;
-        void fill(T value, int c=-1);
-        void fill(std::vector<T> vec, int c=-1);
+    T pixel(size_t i, size_t j, size_t c) const;
+    T* ptr(size_t i, size_t j, size_t c);
+    void fill(T value, int c=-1);
+    void fill(std::vector<T> vec, int c=-1);
 };
 
 
-// Definitions
 
 /**
  * Constructor. Constructs an empty matrix
  */
 template <typename T>
-Matrix<T>::Matrix(): 
+Matrix<T>::Matrix():
     rows{0},
     cols{0},
     channels{0},
-    buf{nullptr}
+    buf{}
 {}
 
 
@@ -55,12 +52,14 @@ Matrix<T>::Matrix():
  * @param c number of channels
  */
 template <typename T>
-Matrix<T>::Matrix(size_t m, size_t n, size_t c)
-    : rows{m}
-    , cols{n}
-    , channels{c}
+Matrix<T>::Matrix(size_t m, size_t n, size_t c):
+    rows{m},
+    cols{n},
+    channels{c},
+    buf{}
 {
-    this->buf = new T[m*n*c];
+    buf.reserve(m*n*c);
+    buf.resize(m*n*c);
 }
 /** Copy Constructor. Constructs a matrix given another matrix
  *
@@ -68,17 +67,12 @@ Matrix<T>::Matrix(size_t m, size_t n, size_t c)
  * @param other reference to a Matrix
  */
 template <typename T>
-Matrix<T>::Matrix(const Matrix<T>& other)
-    : rows{other.rows}
-    , cols{other.cols}
-    , channels{other.channels}
-{
-    this->buf = new T[rows*cols*channels];
-    size_t mnc = rows*cols*channels;
-    for(size_t i = 0; i < mnc; ++i){
-       buf[i] = other.buf[i];
-    }
-}
+Matrix<T>::Matrix(const Matrix<T>& other):
+    rows{other.rows},
+    cols{other.cols},
+    channels{other.channels},
+    buf{other.buf}
+{}
 
 /** Copy Assignment. Assigns the matrix data given another Matrix
  *  
@@ -88,18 +82,10 @@ Matrix<T>::Matrix(const Matrix<T>& other)
  */
 template <typename T>
 Matrix<T>& Matrix<T>::operator=(const Matrix& other){
-    if(buf != nullptr){
-        delete[] buf;
-        buf = nullptr;
-    }
-    this->rows = other.rows;
-    this->cols = other.cols;
-    this->channels = other.channels;
-    size_t mnc = this->rows * this->cols * this->channels;
-    this->buf = new T[mnc];
-    for(size_t i = 0; i < mnc; ++i){
-        buf[i] = other.buf[i];
-    } 
+    rows = other.rows;
+    cols = other.cols;
+    channels = other.channels;
+    buf = other.buf; 
     return *this;
 }
 
@@ -110,73 +96,67 @@ Matrix<T>& Matrix<T>::operator=(const Matrix& other){
  *  - Automatically called
  */
 template <typename T>
-Matrix<T>::~Matrix(){
-    delete[] buf;
-}
+Matrix<T>::~Matrix() = default;
 
 
 /**
- * Returns a pointer to the element at a given index. No bounds checking.
+ * Returns a pointer to the element at a given index.
  *
  * @param i row index
  * @param j col index
- * @param c channel index
+ * @param k channel index
  * @return pointer to the element
  */
 template <typename T>
-T * Matrix<T>::ptr(size_t i, size_t j, size_t c){
-    return buf + i * cols * channels + j * channels + c;
+T * Matrix<T>::ptr(size_t i, size_t j, size_t k){
+    return buf.data() + i * cols * channels + j * channels + k;
 }
+
 /*
  * Returns the pixel at the specified location
  * @param i row index
  * @param j col index
- * @param c channel index
+ * @param k channel index
  * @return value at the pixel
  */
-template <typename T> T Matrix<T>::pixel(size_t i, size_t j, size_t c) const{
-    return *(buf + i * cols * channels + j * channels + c);
+template <typename T> T Matrix<T>::pixel(size_t i, size_t j, size_t k) const{
+    return *(buf.data() + i * cols * channels + j * channels + k);
 }
 
-/** 
- * Returns Number of Rows
- */
-template <typename T>
-size_t Matrix<T>::getRow()const{return rows;}
 
-/**
- * Returns Number of Columns
- */
-template <typename T>
-size_t Matrix<T>::getCol()const{return cols;}
 
-/**
- * Returns Number of Channels
- */
-template <typename T>
-size_t Matrix<T>::getCh()const{return channels;}
 
 /* 
  * Fills matrix with a value at channel c. If c == -1, fills everything
+ * Assume less than INT_MAX channels
  * 
  * @param value
  * @param c
  */
 template <typename T>
 void Matrix<T>::fill(T value, int c){
-    if(c >= (int) channels){// assume channels will not overflow
-        throw(std::runtime_error("C is too large"));
+    if(c >= static_cast<int>(channels)){// assume channels will not overflow
+        throw(std::runtime_error("Channel index too big"));
     }
     if(c < -1){
-        throw(std::runtime_error("C is too small"));
+        throw(std::runtime_error("Channel index too small"));
     }
 
+    if(c == -1){
+        std::fill(buf.begin(), buf.end(), value);
+        return;
+    }
+
+    // no std algorithm for fill based on condition
+    T* ptr = this->ptr(0,0,0);
+    size_t c_t = static_cast<size_t>(c);
     for(size_t i = 0; i < rows; ++i){
         for(size_t j = 0; j < cols; ++j){
             for(size_t k = 0; k < channels; ++k){
-                if(c == -1 || k == c){
-                    *(this->ptr(i,j,k)) = value;
+                if(k == c_t){
+                    *ptr = value;
                 }
+                ++ptr;
             }
         }
     }
@@ -190,23 +170,35 @@ void Matrix<T>::fill(T value, int c){
  */
 template <typename T>
 void Matrix<T>::fill(std::vector<T> vec, int c){
-    if(c > (int) channels)
-        throw(std::runtime_error("c is too large"));
-    if(c < -1)
-        throw(std::runtime_error("c is too small"));
-    if(c == -1 && vec.size() != (rows * cols * channels))
-        throw(std::runtime_error("size of vector incorrect"));
-    if(c != -1 && vec.size() != (rows * cols))
-        throw(std::runtime_error("size of vector incorrect"));
+    if(c > static_cast<int>(channels)){
+        throw(std::runtime_error("Channel index too big"));
+    }
+    if(c < -1){
+        throw(std::runtime_error("Channel index too small"));
+    }
+    if(c == -1 && vec.size() != (rows * cols * channels)){
+        throw(std::runtime_error("Invalid vector size"));
+    }
+    if(c != -1 && vec.size() != (rows * cols)){
+        throw(std::runtime_error("Invalid vector size"));
+    }
 
-    size_t vec_idx = 0;
-    for(int i = 0; i < rows; ++i){
-        for(int j = 0; j < cols; ++j){
-            for(int k = 0; k < channels; ++k){
-                if(c == -1 || k == c){
-                    *(this->ptr(i,j,k)) = vec.at(vec_idx);
-                    ++vec_idx;
+    if(c == -1){
+        buf = vec;
+        return;
+    }
+
+    T* vec_ptr = vec.data();
+    T* p = this->ptr(0,0,0);
+    size_t c_t = static_cast<size_t>(c);
+    for(size_t i = 0; i < rows; ++i){
+        for(size_t j = 0; j < cols; ++j){
+            for(size_t k = 0; k < channels; ++k){
+                if(k == c_t){
+                    *p = *vec_ptr;
+                    ++vec_ptr;
                 } 
+                ++p;
             }
         }
     }
