@@ -23,40 +23,40 @@ TEST(ImageTest, NoLeaks){
 
 TEST(ImageTest, LoadImageAndCheckDimensions){
     Image<unsigned char> i {TEST_IMAGE};
-    EXPECT_EQ(i.getRows(), 8);
-    EXPECT_EQ(i.getCols(), 8);
-    EXPECT_EQ(i.getCha(), 3);
+    EXPECT_EQ(i.rows, 8);
+    EXPECT_EQ(i.cols, 8);
+    EXPECT_EQ(i.channels, 3);
 }
 
-TEST(ImageTest, GetPtrWorks){
+TEST(ImageTest, PtrWorks){
     Image<unsigned char> i {TEST_IMAGE};
-    EXPECT_EQ(*(i.getPtr(0,0,0)), 0); 
-    EXPECT_EQ(*(i.getPtr(0,0,1)), 0); 
-    EXPECT_EQ(*(i.getPtr(0,0,2)), 0); 
+    EXPECT_EQ(*(i.ptr(0,0,0)), 0); 
+    EXPECT_EQ(*(i.ptr(0,0,1)), 0); 
+    EXPECT_EQ(*(i.ptr(0,0,2)), 0); 
 
-    EXPECT_EQ(*(i.getPtr(7,7,0)), 255); 
-    EXPECT_EQ(*(i.getPtr(7,7,1)), 255); 
-    EXPECT_EQ(*(i.getPtr(7,7,2)), 255); 
+    EXPECT_EQ(*(i.ptr(7,7,0)), 255); 
+    EXPECT_EQ(*(i.ptr(7,7,1)), 255); 
+    EXPECT_EQ(*(i.ptr(7,7,2)), 255); 
 }
 
 TEST(ImageTest, GetPixelWorks){
     Image<unsigned char> i {TEST_IMAGE};
-    EXPECT_EQ(i.getPixel(0,0,0), 0); 
-    EXPECT_EQ(i.getPixel(0,0,1), 0); 
-    EXPECT_EQ(i.getPixel(0,0,2), 0); 
+    EXPECT_EQ(i.pixel(0,0,0), 0); 
+    EXPECT_EQ(i.pixel(0,0,1), 0); 
+    EXPECT_EQ(i.pixel(0,0,2), 0); 
 
-    EXPECT_EQ(i.getPixel(7,7,0), 255); 
-    EXPECT_EQ(i.getPixel(7,7,1), 255); 
-    EXPECT_EQ(i.getPixel(7,7,2), 255); 
+    EXPECT_EQ(i.pixel(7,7,0), 255); 
+    EXPECT_EQ(i.pixel(7,7,1), 255); 
+    EXPECT_EQ(i.pixel(7,7,2), 255); 
 }
 
 TEST(ImageTest, SaveImageWorks){
     std::string dest {"../data/test/result.png"};
     Image<unsigned char> image {TEST_IMAGE};
-    unsigned char* image_ptr = image.getPtr(0,0,0);
-    for(int i = 0; i < image.getRows(); ++i){
-        for(int j = 0; j < image.getCols(); ++j){
-            for(int c = 0; c < image.getCha(); ++c){
+    unsigned char* image_ptr = image.ptr(0,0,0);
+    for(size_t i = 0; i < image.rows; ++i){
+        for(size_t j = 0; j < image.cols; ++j){
+            for(size_t c = 0; c < image.channels; ++c){
                 *image_ptr = 128;
                 ++image_ptr;
             }
@@ -65,10 +65,10 @@ TEST(ImageTest, SaveImageWorks){
     image.saveImage(dest);
 
     Image<unsigned char> result {dest};
-    for(int i = 0; i < result.getRows(); ++i){
-        for(int j = 0; j < result.getCols(); ++j){
-            for(int c = 0; c < result.getCha(); ++c){
-                EXPECT_EQ(result.getPixel(i,j,c), 128); 
+    for(size_t i = 0; i < result.rows; ++i){
+        for(size_t j = 0; j < result.cols; ++j){
+            for(size_t c = 0; c < result.channels; ++c){
+                EXPECT_EQ(result.pixel(i,j,c), 128); 
             }
         }
     }
@@ -77,10 +77,10 @@ TEST(ImageTest, SaveImageWorks){
 TEST(ImageTest, CopyConstructorWorks){
     Image<unsigned char> image {TEST_IMAGE};
     Image<unsigned char> copyImage (image);
-    for(int i = 0; i < image.getRows(); ++i){
-        for(int j = 0; j < image.getCols(); ++j){
-            for(int k = 0; k < image.getCha(); ++k){
-                EXPECT_EQ(image.getPixel(i,j,k), copyImage.getPixel(i,j,k));
+    for(size_t i = 0; i < image.rows; ++i){
+        for(size_t j = 0; j < image.cols; ++j){
+            for(size_t k = 0; k < image.channels; ++k){
+                EXPECT_EQ(image.pixel(i,j,k), copyImage.pixel(i,j,k));
             }
         }
     }
@@ -91,7 +91,7 @@ TEST(ImageTest, EqualityWorks){
     Image<unsigned char> image2 {TEST_IMAGE};
     EXPECT_EQ(image1==image2, true);
 
-    *(image1.getPtr(1,1,1)) = image1.getPixel(1,1,1) + 1;
+    *(image1.ptr(1,1,1)) = image1.pixel(1,1,1) + 1;
     EXPECT_EQ(image1==image2, false);
 }
 
@@ -100,7 +100,7 @@ TEST(ImageTest, InequalityWorks){
     Image<unsigned char> image2 {TEST_IMAGE};
     EXPECT_EQ(image1!=image2, false);
 
-    *(image1.getPtr(1,1,1)) = image1.getPixel(1,1,1) + 1;
+    *(image1.ptr(1,1,1)) = image1.pixel(1,1,1) + 1;
     EXPECT_EQ(image1!=image2, true);
 }
 
@@ -108,10 +108,10 @@ TEST(ImageTest, FillWorks){
     Image<int> image {3,3,3};
     int val = 1;
     image.fill(val);
-    for(int i = 0; i < image.getRows(); ++i){
-        for(int j = 0; j < image.getCols(); ++j){
-            for(int k = 0; k < image.getCha(); ++k){
-                EXPECT_EQ(image.getPixel(i,j,k), val);
+    for(size_t i = 0; i < image.rows; ++i){
+        for(size_t j = 0; j < image.cols; ++j){
+            for(size_t k = 0; k < image.channels; ++k){
+                EXPECT_EQ(image.pixel(i,j,k), val);
             }
         }
     }
@@ -120,7 +120,7 @@ TEST(ImageTest, FillWorks){
     Image<int> image1{2,2,1};
     std::vector<int> vec {1,2,3,4};
     image1.fill(vec);
-    int* p = image1.getPtr(0,0,0);
+    int* p = image1.ptr(0,0,0);
     for(int i = 0; i < 4; ++i){
         EXPECT_EQ(vec.at(i), *p);
         ++p;
