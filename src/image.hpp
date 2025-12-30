@@ -19,28 +19,26 @@
 using namespace cv;
 
 template <typename T>
-class Image{
-    private:
-        size_t rows;
-        size_t cols;
-        size_t channels;
-        Matrix<T> data;
+struct Image{
+    size_t rows;
+    size_t cols;
+    size_t channels;
+    Matrix<T> data;
 
-    public:
-         Image();
-         Image(size_t m, size_t n, size_t c);
-         Image(std::string filepath);
-         T getPixel(size_t i, size_t j, size_t c) const;
-         T* getPtr(size_t i, size_t j, size_t c);
-         size_t getRows() const;
-         size_t getCols() const;
-         size_t getCha() const;
-         void saveImage(std::string filepath) const;
-         Image(const Image& other);
-         bool operator==(const Image<T>& other) const;
-         bool operator!=(const Image<T>& other) const;
-         void fill(T value, int channel=-1);
-         void fill(std::vector<T> vec, int channel=-1);
+    Image();
+    Image(size_t m, size_t n, size_t c);
+    Image(std::string filepath);
+    Image(const Image& other);
+    Image& operator=(const Image& other);
+
+    bool operator==(const Image<T>& other) const;
+    bool operator!=(const Image<T>& other) const;
+
+    T pixel(size_t i, size_t j, size_t c) const;
+    T* ptr(size_t i, size_t j, size_t c);
+    void saveImage(std::string filepath) const;
+    void fill(T value, int channel=-1);
+    void fill(std::vector<T> vec, int channel=-1);
 };
 
 /* 
@@ -85,11 +83,12 @@ Image<T>::Image(std::string filepath){
     channels = img.channels();
     data = Matrix<T> {rows, cols, channels};
 
+    // Must read as unsigned char from img
     unsigned char* imgPtr = img.ptr<unsigned char>(0);
     T* dataPtr = data.ptr(0,0,0);
     int len = rows * cols * channels;
     for(int i = 0; i < len; ++i){
-        *dataPtr = (T) *imgPtr;
+        *dataPtr = static_cast<T>(*imgPtr);
         ++dataPtr;
         ++imgPtr;
     }
@@ -100,62 +99,55 @@ Image<T>::Image(std::string filepath){
  * Copy Constructor
  */
 template<typename T>
-Image<T>::Image(const Image& other):
-    rows(other.rows),
-    cols(other.cols),
-    channels(other.channels),
-    data(Matrix<T> {other.rows, other.cols, other.channels})
+Image<T>::Image(const Image<T>& other):
+    rows{other.rows},
+    cols{other.cols},
+    channels{other.channels},
+    data{other.data}
+{}
+
+/* Copy assignment
+ */
+template <typename T>
+Image<T>& Image<T>::operator=(const Image<T>& other)
 {
-    T* dataPtr = data.ptr(0,0,0);
-    for(int i = 0; i < rows; ++i){
-        for(int j = 0; j < cols; ++j){
-            for(int k = 0; k < channels; ++k){
-                *dataPtr = other.getPixel(i,j,k);
-                ++dataPtr;
-            }
-        }
-    }
+    rows = other.rows;
+    cols = other.cols;
+    channels = other.channels;
+    data = other.data;
+    return *this;
 }
 
 /**
- * Returns the value of the pixel at position (i,j,c)
+ * Returns the value of the pixel at position (i,j,k)
  *
  * @param i row index
  * @param j col index
- * @param c channel index
- * @return value at position (i,j,c)
+ * @param k channel index
+ * @return value at position (i,j,k)
  */
 template <typename T>
-T Image<T>::getPixel(size_t i, size_t j, size_t c)const{
-    return data.pixel(i,j,c);
+T Image<T>::pixel(size_t i, size_t j, size_t k)const{
+    return data.pixel(i,j,k);
 }
 
 /*
- * Returns the pointer to the value at position (i,j,c)
+ * Returns the pointer to the value at position (i,j,k)
  *
  * @param i row index
  * @param j col index
- * @param c channel index
+ * @param k channel index
  * @return pointer to the value
  */
 template <typename T>
-T* Image<T>::getPtr(size_t i, size_t j, size_t c){
-    return data.ptr(i,j,c);
+T* Image<T>::ptr(size_t i, size_t j, size_t k){
+    return data.ptr(i,j,k);
 }
-
-template <typename T>
-size_t Image<T>::getRows()const{return rows;}
-
-template <typename T>
-size_t Image<T>::getCols()const{return cols;}
-
-template <typename T>
-size_t Image<T>::getCha()const{return channels;}
 
 
 /*
  * Saves the image
- * For OpenCV, Assume all pixels are 8 bits with 3 channels fro rgb
+ * For OpenCV, Assume all pixels are 8 bits with 3 channels for rgb
  *
  * @param filepath filepath of the destination
  */
@@ -163,11 +155,11 @@ template <typename T>
 void Image<T>::saveImage(std::string filepath)const{
 
     Mat mat(static_cast<int>(rows), static_cast<int>(cols), CV_8UC3);
-    for(int i = 0; i < rows; ++i){
+    for(size_t i = 0; i < rows; ++i){
         unsigned char* Mi = mat.ptr<unsigned char>(i);
-        for(int j = 0; j < cols; ++j){
-            for(int k = 0; k < channels; ++k){
-                Mi[j * channels + k] = getPixel(i,j,k); 
+        for(size_t j = 0; j < cols; ++j){
+            for(size_t k = 0; k < channels; ++k){
+                Mi[j * channels + k] = pixel(i,j,k); 
             }
           
         }
@@ -185,16 +177,16 @@ void Image<T>::saveImage(std::string filepath)const{
  */
 template <typename T>
 bool Image<T>::operator==(const Image<T>& other)const{
-    if(other.getRows() != rows 
-       || other.getCols() != cols 
-       || other.getCha() != channels){
+    if(other.rows != rows 
+       || other.cols != cols 
+       || other.channels != channels){
         return false; 
     } 
 
     for(size_t i = 0; i < rows; ++i){
         for(size_t j = 0; j < cols; ++j){
             for(size_t k = 0; k < channels; ++k){
-                if(other.getPixel(i,j,k) != this->getPixel(i,j,k)){
+                if(other.pixel(i,j,k) != this->pixel(i,j,k)){
                     return false;
                 }
             }

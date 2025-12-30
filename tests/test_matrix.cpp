@@ -45,28 +45,23 @@ TEST_F(MatrixTest, CopyConstructorWorks){
     EXPECT_EQ(10, *(tmp.ptr(1,1,1))); 
 }
 
-TEST_F(MatrixTest, GetWorks){
-    EXPECT_EQ(5, m1_.getRow());
-    EXPECT_EQ(2, m1_.getCol());
-    EXPECT_EQ(3, m1_.getCh());
-}
 
 TEST_F(MatrixTest, FillWorks){
     Matrix<int> mat1 {3,3,3};
     int val = 100;
     mat1.fill(val);
-    for(int i = 0; i < mat1.getRow(); ++i){
-        for(int j = 0; j < mat1.getCol(); ++j){
-            for(int k = 0; k < mat1.getCh(); ++k){
+    for(size_t i = 0; i < mat1.rows; ++i){
+        for(size_t j = 0; j < mat1.cols; ++j){
+            for(size_t k = 0; k < mat1.channels; ++k){
                 EXPECT_EQ(mat1.pixel(i,j,k), val);
             }
         }
     } 
     int val1 = 67;
     mat1.fill(val1, 1);
-    for(int i = 0; i < mat1.getRow(); ++i){
-        for(int j = 0; j < mat1.getCol(); ++j){
-            for(int k = 0; k < mat1.getCh(); ++k){
+    for(size_t i = 0; i < mat1.rows; ++i){
+        for(size_t j = 0; j < mat1.cols; ++j){
+            for(size_t k = 0; k < mat1.channels; ++k){
                 if(k == 1){
                     EXPECT_EQ(mat1.pixel(i,j,k), val1);
                 } else{
@@ -108,13 +103,16 @@ TEST_F(MatrixTest, FillVectorWorks){
                          1,1,1,
                          1,1,1};
     mat2.fill(vec2, 1);
-    for(int i = 0; i < mat2.getRow(); ++i){
-        for(int j = 0; j < mat2.getCol(); ++j){
-            for(int k = 0; k < mat2.getCh(); ++k){
-                if(k == 1)
+
+    for(size_t i = 0; i < mat2.rows; ++i){
+        for(size_t j = 0; j < mat2.cols; ++j){
+            for(size_t k = 0; k < mat2.channels; ++k){
+                if(k == 1){
                     EXPECT_EQ(mat2.pixel(i,j,k), 1);
-                else
+                }
+                else{
                     EXPECT_EQ(mat2.pixel(i,j,k), 0);
+                }
             }
         }
     }

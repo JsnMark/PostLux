@@ -14,16 +14,16 @@
  */
 template <typename T>
 void split(const Image<T>& src, Image<T>* destBegin){
-    size_t rows = src.getRows();
-    size_t cols = src.getCols();
-    size_t channels = src.getCha();
+    size_t rows = src.rows;
+    size_t cols = src.cols;
+    size_t channels = src.channels;
 
-    for(int c = 0; c < channels; ++c){
+    for(size_t c = 0; c < channels; ++c){
         Image<T>* destPtr = destBegin + c;
-        T* dataPtr = destPtr->getPtr(0,0,0);
-        for(int i = 0; i < rows; ++i){
-            for(int j = 0; j < cols; ++j){
-                *dataPtr = src.getPixel(i,j,c);
+        T* dataPtr = destPtr->ptr(0,0,0);
+        for(size_t i = 0; i < rows; ++i){
+            for(size_t j = 0; j < cols; ++j){
+                *dataPtr = src.pixel(i,j,c);
                 ++dataPtr;
             }
         }
@@ -43,21 +43,21 @@ Image<T> merge(Image<T>* srcBegin, size_t numImages = 3){
         throw std::invalid_argument("numImages must be greater than 1");
     } 
     // Ensure all correct dimensions
-    size_t rows = srcBegin->getRows();
-    size_t cols = srcBegin->getCols();
-    for(int curIm = 1; curIm < numImages; ++curIm){
-        if((srcBegin + curIm)->getRows() != rows ||
-           (srcBegin + curIm)->getCols() != cols ||
-           (srcBegin + curIm)->getCha() != 1){
+    size_t rows = srcBegin->rows;
+    size_t cols = srcBegin->cols;
+    for(size_t curIm = 1; curIm < numImages; ++curIm){
+        if((srcBegin + curIm)->rows != rows ||
+           (srcBegin + curIm)->cols != cols ||
+           (srcBegin + curIm)->channels != 1){
             throw std::runtime_error("Images have mismatched dimensions");
         }
     }
 
     Image<T> result {rows, cols, numImages}; 
-    for(int i = 0; i < rows; ++i){
-        for(int j = 0; j < cols; ++j){
-            for(int k = 0; k < numImages; ++k){
-                *(result.getPtr(i,j,k)) = (srcBegin + k)->getPixel(i,j,0); 
+    for(size_t i = 0; i < rows; ++i){
+        for(size_t j = 0; j < cols; ++j){
+            for(size_t k = 0; k < numImages; ++k){
+                *(result.ptr(i,j,k)) = (srcBegin + k)->pixel(i,j,0); 
             }    
         }
     }
@@ -86,21 +86,21 @@ Image<T> pad(const Image<T>& image, Padding_type paddingType,
              size_t top, size_t bottom, size_t left, size_t right,
              T value=0){
 
-    size_t rows = image.getRows() + top + bottom;
-    size_t cols = image.getCols() + left + right;
-    size_t channels = image.getCha();
+    size_t rows = image.rows + top + bottom;
+    size_t cols = image.cols + left + right;
+    size_t channels = image.channels;
     Image<T> newImage {rows, cols, channels};
 
     size_t bottomIndex = rows - bottom;
     size_t rightIndex = cols - right;
-    T* elementPtr = newImage.getPtr(0,0,0);
+    T* elementPtr = newImage.ptr(0,0,0);
     for(size_t i = 0; i < rows; ++i){
         for(size_t j = 0; j < cols; ++j){
             for(size_t k = 0; k < channels; ++k){
                 if(i < top || i >= bottomIndex || j < left || j >= rightIndex){
                     *elementPtr = value;    
                 } else{
-                    *elementPtr = image.getPixel(i - left, j - right, k); 
+                    *elementPtr = image.pixel(i - left, j - right, k); 
                 }
                 elementPtr++; 
             } 
@@ -121,15 +121,15 @@ Image<T> pad(const Image<T>& image, Padding_type paddingType,
  */
 template <typename T>
 bool filterValidate(const size_t& i, const size_t& j, const Image<T>& image, Matrix<T>& filter){
-    size_t x = filter.getRow() / 2;
-    size_t y = filter.getCol() / 2;
+    size_t x = filter.rows / 2;
+    size_t y = filter.cols / 2;
     if(i < x)
         return false;
     if(j < y)
         return false;
-    if((image.getRows() - i) < (x + 1))
+    if((image.rows - i) < (x + 1))
         return false;
-    if((image.getCols() - j) < (y + 1))
+    if((image.cols - j) < (y + 1))
         return false;
     return true;
 }
@@ -146,13 +146,13 @@ bool filterValidate(const size_t& i, const size_t& j, const Image<T>& image, Mat
  */
 template <typename T>
 double applyFilter(int x, int y, int z, const Image<T>& image, const Matrix<T>& filter){
-    int a = (int) filter.getRow() / 2;
-    int b = (int) filter.getCol() / 2;
+    int a = (int) filter.rows / 2;
+    int b = (int) filter.cols / 2;
     T sum = 0;
 
     for(int i = - a; i <= a; ++i){
         for(int j = -b; j <= b; ++j){
-           sum += filter.pixel(i+a,j+b,0) * image.getPixel(x-i,y-j,z);  
+           sum += filter.pixel(i+a,j+b,0) * image.pixel(x-i,y-j,z);  
         }
     } 
     return sum;
@@ -168,12 +168,12 @@ double applyFilter(int x, int y, int z, const Image<T>& image, const Matrix<T>& 
  */
 template <typename T>
 void filter(Image<T>& image, Matrix<T>& filter){
-    size_t mI = image.getRows();
-    size_t nI = image.getCols();
-    size_t cI = image.getCha();
-    size_t mF = filter.getRow();
-    size_t nF = filter.getCol();
-    size_t cF = filter.getCh();
+    size_t mI = image.rows;
+    size_t nI = image.cols;
+    size_t cI = image.channels;
+    size_t mF = filter.rows;
+    size_t nF = filter.cols;
+    size_t cF = filter.channels;
 
     // Filter smaller than image, single channeled, odd length and width
     if((mF > mI) || (nF > nI) || (cF != 1) || ((mF % 2) == 0) || ((nF % 2) == 0)){
@@ -184,7 +184,7 @@ void filter(Image<T>& image, Matrix<T>& filter){
         for(size_t j = 0; j < nI; ++j){
             if (filterValidate(i, j, image, filter)){
                 for(size_t k = 0; k < cI; ++k){
-                    *(image.getPtr(i,j,k)) = applyFilter(i,j,k, imageCpy, filter);
+                    *(image.ptr(i,j,k)) = applyFilter(i,j,k, imageCpy, filter);
                 }
             }
         }
