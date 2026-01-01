@@ -40,7 +40,7 @@ std::vector<size_t> shortestVerticalPath(std::vector<T> costs, size_t rows, size
         ++tmp;
         ++costData;
     }
-    T* choicesPtr = new T[costs.size()];
+    size_t* choicesPtr = new size_t[costs.size()];
 
     // DP. Take node with least cost
     for(size_t i = 1; i < rows; ++i){
@@ -64,8 +64,8 @@ std::vector<size_t> shortestVerticalPath(std::vector<T> costs, size_t rows, size
     }
 
     // Find the end of the path
-    size_t minIndex = costs.size() - 1;
-    T minVal = accPtr[minIndex];
+    size_t minIndex = cols - 1;
+    T minVal = accPtr[costs.size() -1];
     size_t lastRow = rows - 1;
     for(size_t j = 0; j < cols; ++j){
         if(accPtr[lastRow * cols + j] < minVal){
