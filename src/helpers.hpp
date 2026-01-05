@@ -42,7 +42,7 @@ std::vector<size_t> shortestVerticalPath(std::vector<T> costs, size_t rows, size
     }
     size_t* choicesPtr = new size_t[costs.size()];
 
-    // DP. Take node with least cost
+    // DP. Take node with least cost and fill out the array
     for(size_t i = 1; i < rows; ++i){
         size_t min_idx;
         T min_val;
@@ -73,6 +73,7 @@ std::vector<size_t> shortestVerticalPath(std::vector<T> costs, size_t rows, size
             minVal = accPtr[lastRow * cols + j];
         }
     }
+    delete[] accPtr;
 
     // Add back the path, from back to front. Then reverse.
     std::vector<size_t> path {};
@@ -81,6 +82,7 @@ std::vector<size_t> shortestVerticalPath(std::vector<T> costs, size_t rows, size
         minIndex = choicesPtr[i*cols + minIndex];
         path.emplace_back(minIndex);
     }
+    delete[] choicesPtr;
     std::reverse(path.begin(), path.end());
     return path;
 }

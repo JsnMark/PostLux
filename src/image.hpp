@@ -18,16 +18,24 @@
 
 using namespace cv;
 
+enum ImageDataType{
+    UCHAR,
+    DOUBLE,
+    INT
+};
+
+
 template <typename T>
 struct Image{
     size_t rows;
     size_t cols;
     size_t channels;
     Matrix<T> data;
+    ImageDataType datatype;
 
     Image();
-    Image(size_t m, size_t n, size_t c);
-    Image(std::string filepath);
+    Image(size_t m, size_t n, size_t c, ImageDataType dt=UCHAR);
+    Image(std::string filepath, ImageDataType dt=UCHAR);
     Image(const Image& other);
     Image& operator=(const Image& other);
 
@@ -50,6 +58,7 @@ Image<T>::Image()
     , cols{0}
     , channels{0}
     , data{}
+    , datatype{UCHAR}
 {}
 
 
@@ -61,11 +70,12 @@ Image<T>::Image()
  * @param c number of channels
  */
 template <typename T>
-Image<T>::Image(size_t m, size_t n, size_t c)
+Image<T>::Image(size_t m, size_t n, size_t c, ImageDataType dt)
     : rows{m}
     , cols{n}
     , channels{c}
     , data{Matrix<T> {m, n, c}}
+    , datatype{dt}
 {}
 
 /*
@@ -74,7 +84,7 @@ Image<T>::Image(size_t m, size_t n, size_t c)
  * @param filepath path to the image
  */
 template <typename T>
-Image<T>::Image(std::string filepath){
+Image<T>::Image(std::string filepath, ImageDataType dt){
     Mat img = imread(filepath);
     if(img.empty())
         throw std::runtime_error("Empty image. Failed to load image.");
@@ -82,6 +92,7 @@ Image<T>::Image(std::string filepath){
     cols = img.cols;
     channels = img.channels();
     data = Matrix<T> {rows, cols, channels};
+    datatype = dt;
 
     // Must read as unsigned char from img
     unsigned char* imgPtr = img.ptr<unsigned char>(0);
@@ -103,7 +114,8 @@ Image<T>::Image(const Image<T>& other):
     rows{other.rows},
     cols{other.cols},
     channels{other.channels},
-    data{other.data}
+    data{other.data},
+    datatype{other.datatype}
 {}
 
 /* Copy assignment
@@ -115,6 +127,7 @@ Image<T>& Image<T>::operator=(const Image<T>& other)
     cols = other.cols;
     channels = other.channels;
     data = other.data;
+    datatype = other.datatype;
     return *this;
 }
 
@@ -207,16 +220,22 @@ bool Image<T>::operator!=(const Image<T>& other)const{
 }
 
 /*
- * Fills image with a value at specified channel
+ * Fills image with a value at specified channel with a value
  * 
  * @param value 
- * @param channel
+ * @param channel if -1, then fill all channels
  */
 template <typename T>
 void Image<T>::fill(T value, int channel){
     data.fill(value, channel);    
 }
 
+/*
+ * Fills image at specified channel with a vector
+ * 
+ * @param value
+ * @param channel if -1 fill all channels
+ */
 template<typename T>
 void Image<T>::fill(std::vector<T> vec, int channel){
     data.fill(vec, channel);

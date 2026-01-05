@@ -241,6 +241,37 @@ TEST(FilterTest, FilterWorks){
     EXPECT_TRUE(validate == image1);
 }
 
+TEST(ConvertTest, UcharToDouble){
+    Image<unsigned char> u{3,3,1, UCHAR};
+    u.fill(std::vector<unsigned char> {0,0,0,
+                                       51,102,153,
+                                       255,255,255});
+    Image<double> d{3,3,1,DOUBLE};
+    convert(u, d);
+
+    Image<double> validate {3,3,1,DOUBLE};
+    validate.fill(std::vector<double>{0.0,0.0,0.0,
+                                      0.2,0.4,0.6,
+                                      1.0,1.0,1.0});
+    EXPECT_TRUE(validate == d);
+}
+
+TEST(ConvertTest, DoubleToUchar){
+    Image<double> d{3,3,1,DOUBLE};
+    d.fill(std::vector<double>{0.0,0.0,0.0,
+                               0.2,0.4,0.6,
+                               1.0,1.0,1.0});
+
+    Image<unsigned char> u {3,3,1,UCHAR};
+    convert(d, u);
+
+    Image<unsigned char> validate {3,3,1,UCHAR};
+    validate.fill(std::vector<unsigned char> {0,0,0,
+                                       51,102,153,
+                                       255,255,255});
+    EXPECT_TRUE(validate == u);
+}
+
 int main(int argc, char** argv){
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

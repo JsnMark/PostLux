@@ -13,19 +13,21 @@ using namespace cv;
 
 
 int main(){
-    
-    std::vector<int> costs = {1,0,1,1,
-                              1,1,0,1,
-                              1,1,1,0,
-                              1,1,1,0,
-                              1,1,0,1};
-    size_t rows = 5;
-    size_t cols = 4;
+    Image<unsigned char> image {"../data/input/face.jpg"};
+    Image<unsigned char> grayU = RGBToGrayscale(image);
 
-    auto v = shortestVerticalPath(costs, rows, cols);
-    for(auto c : v){
-        std::cout << c << " ";
+    Image<double> grayD {grayU.rows, grayU.cols, 1, DOUBLE};
+    convert(grayU, grayD);
+    
+    Image<double> dest {grayD};
+    sobel(grayD, dest);    
+    if(dest == grayD){
+        std::cout << "EQUAL GRAYD" << std::endl;
     }
-    std::cout<<std::endl;
+    Image<unsigned char> destU {dest.rows, dest.cols, dest.channels, UCHAR};
+    convert(dest, destU);
+    Image<unsigned char> result = grayscaleToRGB(destU);
+    result.saveImage("../data/output/sobel1.jpg");
+
     return 0;    
 }

@@ -3,8 +3,10 @@
 #ifndef CORE_HPP
 #define CORE_HPP
 
-#include "image.hpp"
+#include <functional>
 
+#include "image.hpp"
+#include "helpers.hpp"
 
 /* Splits image into many single channeled images. Caller must allocated appropriate space.
  * Pass by result
@@ -190,6 +192,141 @@ void filter(Image<T>& image, Matrix<T>& filter){
         }
     } 
 } 
+
+/*
+ * Converts an image from one data type to another
+ *
+ * @param srcImage source Image with datatype T
+ * @param destImage destination of Image with datatype U
+ */
+template <typename T, typename U>
+void convert(Image<T>& srcImage, Image<U>& destImage){
+    if(srcImage.rows != destImage.rows 
+            || srcImage.cols != destImage.cols
+            || srcImage.channels != destImage.channels){
+        throw std::runtime_error("Incompatible images");
+    }
+
+    std::function<U(T, double)> func;    
+    if(srcImage.datatype == UCHAR && destImage.datatype == DOUBLE){
+        func = [](unsigned char a, double b){
+            return static_cast<double>(a) / b;
+        };
+    } else if (srcImage.datatype == DOUBLE && destImage.datatype == UCHAR){
+        func = [](double a, double b){
+            double c = a * b;
+            if(c < 0){
+                return static_cast<unsigned char>(0);
+            }
+            if(c > 255){
+                return static_cast<unsigned char>(255);
+            }
+            return static_cast<unsigned char> (c);
+        };
+    }
+
+    double high = 255.0;
+    size_t length = srcImage.rows * srcImage.cols;
+    T* tptr = srcImage.ptr(0,0,0);
+    U* uptr = destImage.ptr(0,0,0);
+    for(size_t i = 0; i < length; ++i){
+        *uptr = static_cast<U>(func(*tptr, high));
+        ++tptr;
+        ++uptr;
+    }
+}
+
+
+/*
+ * Converts grayscale image to RGB
+ * 
+ * @param image
+ * @return returnImage
+ */
+template <typename T>
+Image<T> grayscaleToRGB(Image<T> image){
+    if(image.channels != 1){
+        throw std::runtime_error("image must be grayscale");
+    }
+    Image<T> returnImage {image.rows, image.cols, 3, image.datatype};
+    for(size_t i = 0; i < image.rows; ++i){
+        for(size_t j = 0; j <image.cols; ++j){
+            for(size_t k = 0; k < returnImage.channels; ++k){
+                *returnImage.ptr(i,j,k) = image.pixel(i,j,0);
+            }
+        }
+    }
+    return returnImage;
+}
+
+/*
+ * Converts image to single channeled grayscale image
+ *
+ * @param image colored image
+ * @return returnImage grayscale image
+ */
+template<typename T>
+Image<T> RGBToGrayscale(Image<T> image){
+    if(image.channels !=3){
+        throw std::runtime_error("Image must be colored");
+    }
+    Image<T> returnImage {image.rows, image.cols, 1, image.datatype};
+    for(size_t i = 0; i < image.rows; ++i){
+        for(size_t j = 0; j < image.cols; ++j){
+           *(returnImage.ptr(i,j,0)) = static_cast<unsigned char> (0.2989 * static_cast<double>(*image.ptr(i,j,0))
+                                                                 + 0.5870 * static_cast<double>(*image.ptr(i,j,1))
+                                                                 + 0.1140 * static_cast<double>(*image.ptr(i,j,2)));
+        }
+    }
+    return returnImage;
+}
+
+/* 
+ * Applies sobel operator to a grayscale image
+ *
+ * @param srcImage
+ * @param destImage
+ */
+template <typename T>
+void sobel(Image<T>& srcImage, Image<T>& destImage){
+    if(srcImage.rows != destImage.rows || srcImage.cols != destImage.cols || srcImage.channels != destImage.channels || srcImage.channels != 1){
+        throw std::runtime_error("Image dimensions don't match");
+    }
+    Matrix<T> fx {3,3,1};
+    fx.fill(std::vector<double>{-1, 0, 1,
+                        -2, 0, 2,
+                        -1, 0, 1});
+    Matrix<T> fy {3,3,1};
+    fy.fill(std::vector<double>{-1, -2, -1,
+                         0,  0,  0,
+                         1,  2,  1});
+
+    Image<T> gx {srcImage};
+    Image<T> gy {srcImage};
+
+    Image<T> tmp {gx};
+
+    filter(gx, fx);
+    filter(gy, fy);
+
+    T* destPtr = destImage.ptr(0,0,0);
+    T* gxPtr = gx.ptr(0,0,0); 
+    T* gyPtr = gy.ptr(0,0,0);
+    for(size_t i = 0; i < destImage.rows; ++i){
+        for(size_t j = 0; j < destImage.cols; ++j){
+            *destPtr = *gxPtr + *gyPtr;
+            ++destPtr;
+            ++gxPtr;
+            ++gyPtr; 
+        }
+    }
+}
+
+// template <typename T>
+// Image<T> removeVerticalSeam(Image<T> image){
+//     Image<T> newImage {image.rows, image.cols - 1, image.channels, image.datatype}; 
+//     std::vector<size_t> path = 
+// }
 
 
 #endif
